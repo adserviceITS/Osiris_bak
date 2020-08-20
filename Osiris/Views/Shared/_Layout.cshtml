@@ -1,41 +1,66 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - マイ ASP.NET アプリケーション</title>
+    <title>OSIRIS - @ViewBag.Title</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/bundles/jqueryui")
+    @Scripts.Render("~/bundles/tablesorter")
 </head>
 <body>
-    <div class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                @Html.ActionLink("アプリケーション名", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("ホーム", "Index", "Home")</li>
-                    <li>@Html.ActionLink("詳細", "About", "Home")</li>
-                    <li>@Html.ActionLink("問い合わせ", "Contact", "Home")</li>
+    <div class='fixed-top'>
+        <nav id="navigation" class="navbar navbar-expand-md">
+            @Html.ActionLink("OSIRIS", "Login", "Auth", null, new { @class = "logo" })
+
+            @using Osiris.Modules
+            @if (User.Identity.IsAuthenticated && Session["userInfo"] != null)
+            {
+                <!-- 検索フォーム -->
+                <form class="nav-form-inline">
+                    <div class="input-group">
+                        <input class="form-control" style="width:150px; height:27px; text-align:left;" type="text" placeholder="受付番号">
+                        <span class="input-group-append">
+                            <button class="btn btn-primary" type="submit" style="width:29px; height:27px; padding:0; font-size:14px;">
+                                <i class="fas fa-search" style="width:15px;"></i>
+                            </button>
+                        </span>
+                    </div>
+                </form>
+                <ul class="links mr-auto">
+                    <li style="margin-left:30px;">@Html.ActionLink("新規登録", "SOListSearch", "SOList")</li>
+                    <li>@Html.ActionLink("受付開始", "Index", "SerialList")</li>
+                    <li class="dropdown">
+                        <a href="#" class="trigger-drop">マスタメンテ<i class="arrow"></i></a>
+                        <ul class="drop" style="padding-left:10px;">
+                            <li style="margin-right:150px;">@Html.ActionLink("ユーザーマスタ", "UserSearch", "Master")</li>
+                            <li>@Html.ActionLink("商品マスタ", "HolidayDataUpLoad", "Master")</li>
+                            <li>@Html.ActionLink("代理店マスタ", "PlanDataUpLoad", "WhiteBoard")</li>
+                        </ul>
+                    </li>
                 </ul>
-            </div>
-        </div>
+                <ul class="links">
+                    @{
+                        UserInfo userInfo = (UserInfo)Session["userInfo"];
+                        string userName = userInfo.UserName;
+                    }
+                    <li class="text-success mark">@userName</li>
+                    <li>@Html.ActionLink("ログアウト", "Logout", "Auth")</li>
+                </ul>
+            }
+        </nav>
     </div>
     <div class="container body-content">
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - マイ ASP.NET アプリケーション</p>
+            <p>&copy; @DateTime.Now.Year - Address Service Co., Ltd.</p>
         </footer>
     </div>
-
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
