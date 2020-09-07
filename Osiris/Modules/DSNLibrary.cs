@@ -9,7 +9,6 @@ namespace Osiris.Modules
         private SqlConnection connection;
         private SqlCommand command;
         private SqlTransaction transaction;
-        public SqlDataReader Reader { get; set; }
 
         // コンストラクタ
         public DSNLibrary()
@@ -27,24 +26,18 @@ namespace Osiris.Modules
         }
 
         // SQL実行 Select
-        public void ExecSQLRead(string strSql)
+        public SqlDataReader ExecSQLRead(string strSql)
         {
             try
             {
                 command.CommandText = strSql;
-                Reader = command.ExecuteReader();
-            }
-            catch (SqlException ex)
-            {
-                Reader.Close();
-                transaction.Rollback();
-                transaction.Dispose();
-                connection.Close();
-                connection.Dispose();
-                connection = null;
 
-                Debug.WriteLine(strSql.ToString());
-                Console.WriteLine(ex.Message);
+                SqlDataReader reader = command.ExecuteReader();
+                return reader;
+            }
+            catch (Exception exception)
+            {
+                DB_Close(exception);
                 throw;
             }
         }
@@ -57,15 +50,9 @@ namespace Osiris.Modules
                 command.CommandText = strSql;
                 command.ExecuteNonQuery();
             }
-            catch (SqlException ex)
+            catch (Exception exception)
             {
-                transaction.Rollback();
-                transaction.Dispose();
-                connection.Close();
-                connection.Dispose();
-                connection = null;
-
-                Console.WriteLine(ex.Message);
+                DB_Close(exception);
                 throw;
             }
         }
@@ -77,7 +64,6 @@ namespace Osiris.Modules
             {
                 if (connection.State == System.Data.ConnectionState.Open)
                 {
-                    Reader.Close();
                     transaction.Commit();
                     transaction.Dispose();
                     connection.Close();
@@ -86,11 +72,32 @@ namespace Osiris.Modules
                 connection = null;
 
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Console.WriteLine(ex.Message);
+                DB_Close(exception);
                 throw;
             }
+        }
+
+        // DB切断エラー時
+        public void DB_Close(Exception exception)
+        {
+            transaction.Rollback();
+            transaction.Dispose();
+            command.Dispose();
+            connection.Close();
+            connection.Dispose();
+            connection = null;
+
+            Console.WriteLine(exception.Message);
+        }
+
+        // シングルコーテーションエスケープ Utility
+        public string SingleEscape(string param)
+        {
+            if (!string.IsNullOrEmpty(param)) param = param.Replace("'", "''");
+
+            return param;
         }
     }
 }

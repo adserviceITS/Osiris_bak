@@ -51,6 +51,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -125,10 +126,12 @@
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\AcceptanceController.cs" />
+    <Compile Include="Controllers\MainController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\AcceptanceModels.cs" />
+    <Compile Include="Models\Acceptance1Models.cs" />
+    <Compile Include="Models\Acceptance2Models.cs" />
     <Compile Include="Models\LoginModels.cs" />
     <Compile Include="Modules\ConstDef.cs" />
     <Compile Include="Modules\DropDownList.cs" />
@@ -152,6 +155,11 @@
     <Content Include="Content\brands.min.css" />
     <Content Include="Content\fontawesome.css" />
     <Content Include="Content\fontawesome.min.css" />
+    <Content Include="Content\img\ArrivalDateSample01.jpg" />
+    <Content Include="Content\img\ArrivalSample01.jpg" />
+    <Content Include="Content\img\DistributorSample01.jpg" />
+    <Content Include="Content\img\DistributorSample02.jpg" />
+    <Content Include="Content\img\ReturnSample01.jpg" />
     <Content Include="Content\jquery-ui.css" />
     <Content Include="Content\jquery-ui.min.css" />
     <Content Include="Content\Login.css" />
@@ -287,6 +295,7 @@
     <Content Include="Scripts\src\utils\setAttributes.js" />
     <Content Include="Scripts\src\utils\setStyles.js" />
     <Content Include="Scripts\src\utils\setupEventListeners.js" />
+    <Content Include="Scripts\sweetalert.min.js" />
     <Content Include="Scripts\umd\popper-utils.js" />
     <Content Include="Scripts\umd\popper-utils.min.js" />
     <Content Include="Scripts\umd\popper.js" />
@@ -315,14 +324,14 @@
     <Content Include="Scripts\umd\popper.js.flow" />
     <Content Include="Scripts\umd\popper.js.map" />
     <Content Include="Scripts\umd\popper.min.js.map" />
-    <Content Include="Views\Acceptance\Acceptance.cshtml" />
+    <Content Include="Views\Acceptance\Acceptance1.cshtml" />
     <Content Include="Views\Acceptance\_Header.cshtml" />
+    <Content Include="Views\Main\Top.cshtml" />
+    <Content Include="Views\Acceptance\Acceptance2.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Content\audio\" />
-    <Folder Include="Content\img\" />
-    <Folder Include="Views\Main\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.min.css.map" />

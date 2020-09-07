@@ -1,5 +1,5 @@
 ﻿body {
-    padding-top: 50px;
+    padding-top: 40px;
     padding-bottom: 20px;
 }
 
@@ -23,6 +23,33 @@ textarea {
     max-width: 280px;
 }
 
+/* 各デフォルト値の微調整 */
+.form-control {
+    height: unset;
+    font-size: unset;
+    margin-bottom: 0;
+    padding: 3px 6px 3px 6px;
+}
+
+.input-group-text {
+    font-size: unset;
+    padding: 3px 6px 3px 6px;
+}
+
+.btn {
+    font-size: unset;
+    padding: 3px 6px 3px 6px;
+}
+
+label {
+    margin: unset;
+}
+
+/* 色追加 */
+.bg-orange {
+    background-color: #FF9900;
+}
+
 /* nav bar */
 * {
     box-sizing: border-box;
@@ -31,7 +58,7 @@ textarea {
 body {
     color: #222;
     line-height: normal;
-    font-size: 14px;
+    font-size: 12px;
     font-family: sans-serif;
 }
 
@@ -53,7 +80,8 @@ nav {
     background: #fff;
     box-shadow: 0 0px 9px 4px rgba(0, 0, 0, 0.1), 0 -5px 2px 2px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    min-width: 1280px;
+    min-width: 1000px;
+    font-size: 15px;
 }
 
     nav .logo {
@@ -85,7 +113,7 @@ nav {
     }
 
         nav .links li {
-            float: left;
+            /* float: left; */
             list-style: none;
             position: relative;
             margin: 10px;
@@ -167,15 +195,8 @@ nav {
 
 .nav-form-inline {
     display: flex;
-    align-items: center;
-    height: 47px;
     float: left;
     position: relative;
-    margin-left: 50px;
-}
-
-.form-control {
-    margin-bottom: 0;
 }
 
 .navbar {
@@ -758,4 +779,10 @@ img.ui-datepicker-trigger {
 }
 .ui-datepicker {
     font-size: 100%;
+}
+
+/* マーカー強調文字 */
+.marker-yellow {
+    font-weight: bold;
+    background: linear-gradient(transparent 60%, #ffff00 0%);
 }

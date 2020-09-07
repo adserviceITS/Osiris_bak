@@ -16,7 +16,8 @@ namespace Osiris
 
             bundles.Add(new ScriptBundle("~/bundles/jqueryui").Include(
                         "~/Scripts/jquery-ui*",
-                        "~/Scripts/datepicker-ja.js"));
+                        "~/Scripts/datepicker-ja.js",
+                        "~/Scripts/sweetalert.min.js"));
 
             // 開発と学習には、Modernizr の開発バージョンを使用します。次に、実稼働の準備が
             // 運用の準備が完了したら、https://modernizr.com のビルド ツールを使用し、必要なテストのみを選択します。

@@ -6,60 +6,84 @@ namespace Osiris.Modules
 {
     public class DropDownList
     {
-        // ASUS様指示
-        public List<CombInstruction> GetDropDownListInstruction()
+        // 販路
+        public List<CombVendor> GetDropDownListVendor()
         {
             DSNLibrary dsnLib = new DSNLibrary();
             StringBuilder stbSql = new StringBuilder();
 
             stbSql.Append("SELECT ");
-            stbSql.Append("    M_INSTRUCTION.INSTRUCTION_ID, ");
-            stbSql.Append("    M_INSTRUCTION.INSTRUCTION ");
+            stbSql.Append("    販売店マスタ.ID, ");
+            stbSql.Append("    販売店マスタ.販売店名 ");
             stbSql.Append("FROM ");
-            stbSql.Append("    M_INSTRUCTION ");
+            stbSql.Append("    販売店マスタ ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("    販売店マスタ.削除フラグ <> '1' ");
             stbSql.Append("ORDER BY ");
-            stbSql.Append("    M_INSTRUCTION.INSTRUCTION_ID ");
+            stbSql.Append("    販売店マスタ.序列 ");
 
-            dsnLib.ExecSQLRead(stbSql.ToString());
+            SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
 
-            List<CombInstruction> DropDownListInstruction = new List<CombInstruction>();
+            List<CombVendor> DropDownListVendor = new List<CombVendor>();
 
-            while (dsnLib.Reader.Read())
+            while (sqlRdr.Read())
             {
-                DropDownListInstruction.Add(new CombInstruction
+                DropDownListVendor.Add(new CombVendor
                 {
-                    InstructionID = dsnLib.Reader["INSTRUCTION_ID"].ToString(),
-                    Instruction = dsnLib.Reader["INSTRUCTION"].ToString()
+                    VendorID = sqlRdr["ID"].ToString(),
+                    VendorName = sqlRdr["販売店名"].ToString()
                 });
             }
+            sqlRdr.Close();
             dsnLib.DB_Close();
 
-            return DropDownListInstruction;
+            return DropDownListVendor;
+        }
+
+        // 代理店
+        public List<CombDistributor> GetDropDownListDistributor()
+        {
+            DSNLibrary dsnLib = new DSNLibrary();
+            StringBuilder stbSql = new StringBuilder();
+
+            stbSql.Append("SELECT ");
+            stbSql.Append("    代理店マスタ.ID, ");
+            stbSql.Append("    代理店マスタ.代理店名 ");
+            stbSql.Append("FROM ");
+            stbSql.Append("    代理店マスタ ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("    代理店マスタ.削除フラグ <> '1' ");
+            stbSql.Append("ORDER BY ");
+            stbSql.Append("    代理店マスタ.序列 ");
+
+            SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+
+            List<CombDistributor> DropDownListDistributor = new List<CombDistributor>();
+
+            while (sqlRdr.Read())
+            {
+                DropDownListDistributor.Add(new CombDistributor
+                {
+                    DistributorID = sqlRdr["ID"].ToString(),
+                    DistributorName = sqlRdr["代理店名"].ToString()
+                });
+            }
+            sqlRdr.Close();
+            dsnLib.DB_Close();
+
+            return DropDownListDistributor;
         }
     }
 
-    public class CombInstruction
+    public class CombVendor
     {
-        public string InstructionID { get; set; }
-        public string Instruction { get; set; }
+        public string VendorID { get; set; }
+        public string VendorName { get; set; }
     }
 
-    public class CombLine
+    public class CombDistributor
     {
-        public string LineID { get; set; }
-        public string LineName { get; set; }
+        public string DistributorID { get; set; }
+        public string DistributorName { get; set; }
     }
-
-    public class CombSerialStatus
-    {
-        public string SerialStatusID { get; set; }
-        public string SerialStatusName { get; set; }
-    }
-
-    public class CombAuthorityName
-    {
-        public string ID { get; set; }
-        public string AuthorityName { get; set; }
-    }
-
 }

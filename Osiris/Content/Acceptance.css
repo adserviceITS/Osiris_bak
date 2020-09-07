@@ -1,6 +1,35 @@
-﻿.hr-acpt {
-    border-top: 4px double #0026ff;
+﻿.table {
+    margin: unset;
     text-align: center;
+}
+
+.td {
+    padding: unset;
+
+}
+
+.btn-yellow {
+    color: #212529;
+    background-color: #FFFF00;
+    border-color: #C0C0C0;
+}
+
+    .btn-yellow:not(:disabled):not(.disabled).active, .show > .btn-yellow.dropdown-toggle {
+        color: white;
+        background-color: #DD0000;
+        border-color: #BB0000;
+    }
+
+.btn-secondary:not(:disabled):not(.disabled).active, .show > .btn-secondary.dropdown-toggle {
+    color: #212529;
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.hr-acpt {
+    border-top: 4px double #000088;
+    text-align: center;
+    margin-top: 0.5rem;
 }
 
     .hr-acpt:after {
@@ -10,6 +39,98 @@
         top: -15px;
         padding: 0 10px;
         background: #fff;
-        color: #0026ff;
+        color: #000088;
         font-size: 18px;
     }
+
+/*パンくず*/
+.breadcrumb { /*全体*/
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    overflow: hidden;
+    counter-reset: flag;
+    padding: unset;
+    margin: unset;
+    background-color: white;
+}
+
+    .breadcrumb p {
+        text-decoration: none;
+        outline: none;
+        display: block;
+        float: left;
+        font-size: 18px;
+        line-height: 36px;
+        padding: 0 20px 0 60px;
+        background: white;
+        background: linear-gradient(#DDDDDD, #555555);
+        position: relative;
+        color: white;
+    }
+
+        .breadcrumb p:first-child { /*最初のリンクの角丸設定*/
+            border-radius: 5px 0 0 5px;
+        }
+
+        .breadcrumb a:first-child:before {
+            left: 14px;
+        }
+
+        .breadcrumb p:last-child {/*最後のリンクの角丸設定*/
+            border-radius: 0 5px 5px 0;
+            padding-right: 20px;
+        }
+
+        .breadcrumb p.active {
+            background: #AEFFBD;
+            background: linear-gradient(#AEFFBD, #00AA00);
+            color: #FFF;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+            .breadcrumb p.active:after {
+                background: #AEFFBD;
+                background: linear-gradient(135deg, #AEFFBD, #00AA00);
+            }
+
+        .breadcrumb p:after { /*羽部分*/
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -18px;
+            width: 36px;
+            height: 33px;
+            transform: scale(0.707) rotate(45deg);
+            z-index: 1;
+            color: black;
+            background: white;
+            background: linear-gradient(135deg, #DDDDDD, #555555);
+            box-shadow: 2px -2px 0 2px rgba(0, 0, 0, 0.4), 3px -3px 0 2px rgba(255, 255, 255, 0.1);
+            border-radius: 0 5px 0 50px;
+        }
+
+        .breadcrumb p:last-child:after {
+            content: none;
+        }
+
+        .breadcrumb p:before { /*カウンター設置で自動ナンバリング*/
+            content: counter(flag);
+            counter-increment: flag;
+            border-radius: 100%;
+            width: 20px;
+            height: 20px;
+            line-height: 22px;
+            margin: 8px 0;
+            position: absolute;
+            top: 0;
+            left: 30px;
+            color: black;
+            background: white;
+            font-size: 14px;
+            text-shadow: 0 -1px 1px #000, 1px 1px 1px #fff;
+        }
+
+div.modal div.modal-backdrop {
+    z-index: 0;
+}

@@ -26,19 +26,21 @@ namespace Osiris.Controllers
             StringBuilder stbSql = new StringBuilder();
 
             stbSql.Append("SELECT * ");
-            stbSql.Append("FROM dbo.M_USER ");
-            stbSql.Append("WHERE ID = '" + model.ID + "' AND ");
-            stbSql.Append("      PASS = '" + model.Password + "'");
+            stbSql.Append("FROM dbo.ユーザー ");
+            stbSql.Append("WHERE ログイン名 = '" + model.ID + "' AND ");
+            stbSql.Append("      パスワード = '" + model.Password + "'");
 
             DSNLibrary dsnLib = new DSNLibrary();
-            dsnLib.ExecSQLRead(stbSql.ToString());
+            SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
 
-            if (!dsnLib.Reader.HasRows)
+            if (!sqlRdr.HasRows)
             {
                 ModelState.AddModelError(string.Empty, "ID、または Password が違います");
+                sqlRdr.Close();
                 dsnLib.DB_Close();
                 return View(model);
             }
+            sqlRdr.Close();
             dsnLib.DB_Close();
 
             // 認証成功
@@ -48,7 +50,7 @@ namespace Osiris.Controllers
             UserInfo userInfo = new UserInfo(model.ID);
             Session["userInfo"] = userInfo;
 
-            return RedirectToAction("Index", "Acceptance");
+            return RedirectToAction("Index", "Main");
         }
 
         // GET: Auth/Logout

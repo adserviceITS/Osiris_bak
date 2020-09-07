@@ -1,0 +1,549 @@
+﻿@model Osiris.Models.Acceptance1Models
+@{
+    ViewBag.Title = "受付 Step1";
+}
+<!-- 住所自動入力スクリプト -->
+<script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
+<link href="~/Content/Acceptance.css" rel="stylesheet" />
+@using (Html.BeginForm("Entry", "Acceptance", "", FormMethod.Post, new { id = "Entry1Form" }))
+{
+    <header class="sticky-top" style="top:40px; background-color:white; padding-top:10px; padding-bottom: 1px;">
+        @Html.Partial("_Header")
+    </header>
+    <main class="mb-5">
+        <!-- 経由トグル ---------------------------------------------------------------------------------->
+        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-secondary active" style="font-size:16px;">
+                <input class="form-check-input" type="radio" name="RouteCd" id="R001"> 個人経由
+            </label>
+            <label class="btn btn-secondary" style="font-size:16px;">
+                <input class="form-check-input" type="radio" name="RouteCd" id="R002"> 代理店経由
+            </label>
+        </div>
+        <!-- 入荷日 -------------------------------------------------------------------------------------->
+        <div class="form-row" style="padding-top: 20px;">
+            <div class="input-group col-md-4" style="height:27px;">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" style="color:white; background-color:#007bff;">入荷日</span>
+                </div>
+                @Html.TextBoxFor(model => model.ArrivalDate, null, new { @class = "form-control", placeholder = "カレンダー選択", style = "max-width: 120px;" })
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary" id="MinusDay">-1日</button>
+                    <button type="button" class="btn btn-outline-secondary" id="ToDay">今日</button>
+                    <button type="button" class="btn btn-outline-secondary" id="PlusDay">+1日</button>
+                </div>
+            </div>
+            <div class="col-md-1"></div>
+            <img style="max-width:100%;" src="~/Content/img/ArrivalDateSample01.jpg" alt="入荷日サンプル" id="ArrivalDateSample01" />
+        </div>
+        <!-- 代理店情報入力 ------------------------------------------------------------------------------>
+        <div class="form-row" style="margin-top: 40px;">
+            <div class="input-group col-md-4">
+                <table class="table table-bordered table-sm table-hover table-condensed">
+                    <tr>
+                        <td colspan="2" class="bg-orange" style="background-color:#FF6600">代理店情報を入力してください。</td>
+                    </tr>
+                    <tr>
+                        <td style="width:75px; vertical-align: middle;">販路</td>
+                        <td>
+                            @Html.DropDownListFor(
+                                model => model.VendorID, // プロパティ
+                                new SelectList(Model.DropDownListVendor, "VendorID", "VendorName"),
+                                "",
+                                new { @class = "form-control form-control-sm", style = "border:unset;" }
+                            )
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">代理店</td>
+                        <td>
+                            @Html.DropDownListFor(
+                                model => model.DistributorID, // プロパティ
+                                new SelectList(Model.DropDownListDistributor, "DistributorID", "DistributorName"),
+                                "",
+                                new { @class = "form-control form-control-sm", style = "border:unset;" }
+                            )
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">着払い金額</td>
+                        <td>@Html.TextBoxFor(model => model.CodCost, null, new { @class = "form-control", placeholder = "着払い金額入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">取扱店</td>
+                        <td>@Html.TextBoxFor(model => model.Shop, null, new { @class = "form-control", placeholder = "取扱店入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">請求書番号</td>
+                        <td>@Html.TextBoxFor(model => model.InvoiceNo, null, new { @class = "form-control", placeholder = "請求書番号入力", style = "border:unset;" })</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-1"></div>
+            <div class="input-group col-md-7 row" style="margin:unset;">
+                <img style="max-width:50%;" src="~/Content/img/DistributorSample01.jpg" alt="代理店サンプル１" id="DistributorSample01" />
+                <img style="max-width:50%; padding-left: 5px;" src="~/Content/img/DistributorSample02.jpg" alt="代理店サンプル２" id="DistributorSample02" />
+            </div>
+        </div>
+        <!-- 入荷元情報入力 ------------------------------------------------------------------------------>
+        <div class="form-row" style="margin-top: 30px;">
+            <div class="input-group col-md-4">
+                <table class="table table-bordered table-sm table-hover table-condensed">
+                    <tr>
+                        <td colspan="2" class="bg-warning">入荷元情報を入力してください。</td>
+                    </tr>
+                    <tr>
+                        <td style="width:75px; vertical-align: middle;">顧客名</td>
+                        <td>@Html.TextBoxFor(model => model.ArrCustomerName, null, new { @class = "form-control", placeholder = "顧客名入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">郵便番号</td>
+                        <td>
+                            <div class="input-group">
+                                @Html.TextBoxFor(model => model.ArrPostalCode, null, new { @class = "form-control", placeholder = "郵便番号入力", style = "border:unset; width:80px;", maxlength = "7" })
+                                <span class="input-group-append">
+                                    <button class="btn btn-danger" type="button" id="getArrAddressBtn">住所取得</button>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">住所①</td>
+                        <td>@Html.TextBoxFor(model => model.ArrAddress1, null, new { @class = "form-control", placeholder = "住所①入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">住所②</td>
+                        <td>@Html.TextBoxFor(model => model.ArrAddress2, null, new { @class = "form-control", placeholder = "住所②入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">法人名</td>
+                        <td>@Html.TextBoxFor(model => model.ArrCorporateName, null, new { @class = "form-control", placeholder = "法人名入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">電話番号①</td>
+                        <td>@Html.TextBoxFor(model => model.ArrTelNo1, null, new { @class = "form-control", placeholder = "電話番号①入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">ＦＡＸ番号</td>
+                        <td>@Html.TextBoxFor(model => model.ArrFaxNo, null, new { @class = "form-control", placeholder = "ＦＡＸ番号入力", style = "border:unset;" })</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-1"></div>
+            <div class="col-md-7">
+                <img style="max-width:100%;" src="~/Content/img/ArrivalSample01.jpg" alt="入荷元サンプル１" id="ArrivalSample01" />
+            </div>
+        </div>
+        <!-- 返送先情報入力 ------------------------------------------------------------------------------>
+        <div class="row" style="margin-top:30px; font-size:16px;">
+            <div class="col-md-2">
+                <p class="marker-yellow">返送先に変更はあるか</p>
+            </div>
+            <div class="col-md-10">
+                <div class="form-check form-check-inline">
+                    @Html.RadioButtonFor(model => model.ReturnFlg, "1", new { @class = "form-check-input", autocomplete = "off", id = "ReturnFlg1" })
+                    <label class="form-check-label" for="ReturnFlg1">はい</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    @Html.RadioButtonFor(model => model.ReturnFlg, "0", new { @class = "form-check-input", autocomplete = "off", id = "ReturnFlg0" })
+                    <label class="form-check-label" for="ReturnFlg0">いいえ</label>
+                </div>
+            </div>
+        </div>
+        <div class="form-row" style="margin-top: 20px;">
+            <div class="input-group col-md-4">
+                <table class="table table-bordered table-sm table-hover table-condensed">
+                    <tr>
+                        <td colspan="2" class="bg-warning">返送先情報を入力してください。</td>
+                    </tr>
+                    <tr>
+                        <td style="width:75px; vertical-align: middle;">顧客名</td>
+                        <td>@Html.TextBoxFor(model => model.RtnCustomerName, null, new { @class = "form-control", placeholder = "顧客名入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">郵便番号</td>
+                        <td>
+                            <div class="input-group">
+                                @Html.TextBoxFor(model => model.RtnPostalCode, null, new { @class = "form-control", placeholder = "郵便番号入力", style = "border:unset; width:80px;", maxlength = "7" })
+                                <span class="input-group-append">
+                                    <button class="btn btn-danger" type="button" id="getRtnAddressBtn">住所取得</button>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">住所①</td>
+                        <td>@Html.TextBoxFor(model => model.RtnAddress1, null, new { @class = "form-control", placeholder = "住所①入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">住所②</td>
+                        <td>@Html.TextBoxFor(model => model.RtnAddress2, null, new { @class = "form-control", placeholder = "住所②入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">法人名</td>
+                        <td>@Html.TextBoxFor(model => model.RtnCorporateName, null, new { @class = "form-control", placeholder = "法人名入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">電話番号①</td>
+                        <td>@Html.TextBoxFor(model => model.RtnTelNo1, null, new { @class = "form-control", placeholder = "電話番号①入力", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">ＦＡＸ番号</td>
+                        <td>@Html.TextBoxFor(model => model.RtnFaxNo, null, new { @class = "form-control", placeholder = "ＦＡＸ番号入力", style = "border:unset;" })</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-1"></div>
+            <div class="input-group col-md-7">
+                <img style="max-width:100%;" src="~/Content/img/ReturnSample01.jpg" alt="返送先サンプル１" id="ReturnSample01" />
+            </div>
+        </div>
+        <!-- ボタン類 ------------------------------------------------------------------------------>
+        <div class="form-inline" style="text-align:right; display: block; margin-top: 30px; font-size: 18px;">
+            <button class="btn btn-primary btn-lg" style="width: 300px;" formaction="/Acceptance/NextToStep2" id="NextToStep2Btn">次へ</button>
+            @Html.ActionLink("TOP画面へ", "Index", "Main", null, new { @class = "btn btn-danger btn-lg", style = "width: 150px;" })
+        </div>
+    </main>
+}
+<!-- こっからモーダル ---------------------------------------------------------------------->
+<!-- 処理状況モーダル ------------------------------------------------------------------------------>
+<div class="modal fade" tabindex="-1" role="dialog" id="ProgressModal" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">処理状況</h5>
+            </div>
+            <!-- Modal ボディー -->
+            <p id="ProgressMsg" style="margin: 15px;">処理を開始します。</p>
+            <div class="modal-body" style="width: 100%; padding: 15px">
+                <div class="progress progress-striped active" style="height:20px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%" id="pgss"></div>
+                </div>
+            </div>
+            <!-- Modal フッター -->
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 共通メモ ------------------------------------------------------------------------------>
+<div class="modal fade" tabindex="-1" role="dialog" id="CommonMemoModal" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">共通メモ</h5>
+                <button type="button" class="btn close" data-dismiss="modal" aria-label="閉じる">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form role="form" id="EntryCommonMemoForm" action="/Acceptance/EntryCommonMemo" method="POST">
+                <!-- Modal ボディー -->
+                <div class="modal-body">
+                    <button type="button" class="btn btn-primary" id="InsertDate" style="margin-bottom:10px;">日付挿入</button>
+                    <div class="form-row" style="margin-bottom: 10px;">
+                        @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
+                    </div>
+                </div>
+                @Html.HiddenFor(model => model.ReceptionNumber)
+                <!-- Modal フッター -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="EntryCommonMemoBtn">保存</button>
+                    <button type="button" class="btn btn-outline-dark pull-left" data-dismiss="modal">閉じる</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+
+        // 新規登録時（処理が長くなりそうなので処理状況を表示）
+        @*var NewEntryFlg = "@ViewBag.NewEntryFlg";
+        if (NewEntryFlg == "true") {
+            // 処理状況モーダル表示
+            $('#ProgressModal').modal();
+
+            // 採番処理実行
+            $("#ProgressMsg").text("新規受付番号を発行しています。")
+            $.ajax({
+                url: '@Url.Action("NewEntry_2", "Acceptance")',
+                type: "GET"
+            })
+                .done(function (data, status, xhr) {
+                    // 正常時
+                    var strReceptionNumber = data["ReceptionNumber"];
+                    $("#SearchReceptionNumber").val(strReceptionNumber);
+                    $("#ProgressMsg").text("新規受付番号を発行完了しました。")
+                    $("#pgss").css({ 'width': '70%' });
+
+                    // 初期セット処理実行
+                    $("#ProgressMsg").text("初期データをセットします。")
+                    $("#SearchReceptionForm").submit();
+                    $("#pgss").css({ 'width': '70%' });
+
+                    var param = {
+                        SearchReceptionNumber: strReceptionNumber
+                    }
+                    $.ajax({
+                        url: '@Url.Action("SearchRcpInfo", "Acceptance")',
+                        type: "POST",
+                        data: param
+                    })
+                        .done(function (data, status, xhr) {
+                            // 正常時
+                            $("#pgss").css({ 'width': '100%' });
+                            $('#ProgressModal').modal('hide');
+                        }).fail(function (xhr, status, error) {
+                            // 異常時
+                            $('#ProgressModal').modal('hide');
+                            swal("システムエラー", error, "error");
+                        });
+                }).fail(function (xhr, status, error) {
+                    // 異常時
+                    $('#ProgressModal').modal('hide');
+                    swal("システムエラー", error, "error");
+                });
+        }*@
+
+        // F5が押された時
+        //$(document).keydown(function (event) {
+        //    // キーコードを取得する
+        //    var keyCode = event.keyCode;
+        //    // F5 の場合はfalse
+        //    if (keyCode == 116) {
+        //        swal("エラー", "F5キーは無効です！", "error")
+        //        return false;
+        //    }
+        //});
+
+        // フラグの初期セット
+
+
+        // 受付番号のCボタン押下時
+        $("#RcpNoCopyBtn").click(function () {
+            $("#ReceptionNumber").select();
+            document.execCommand('copy');
+        })
+
+        // 共通メモボタン押下時
+        $('#CommonMemoBtn').click(function () {
+            $('#CommonMemoModal').modal();
+            @{
+                string cMemo = Model.CommonMemo;
+                if (!string.IsNullOrEmpty(cMemo)) {
+                    cMemo = cMemo.Replace("\r\n", "\\r\\n");
+                }
+            }
+            $('#CommonMemo').val('@cMemo');
+        });
+
+        // 共通メモの日付挿入ボタンクリック時
+        $("#InsertDate").click(function () {
+            var dt = new Date();
+            var y = dt.getFullYear();
+            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
+            var d = ("00" + dt.getDate()).slice(-2);
+            var h = ("00" + dt.getHours()).slice(-2);
+            var mi = ("00" + dt.getMinutes()).slice(-2);
+            var s = ("00" + dt.getSeconds()).slice(-2);
+            var ToDayDateTime = y + "/" + m + "/" + d + " " + h + ":" + mi + ":" + s
+
+            @using Osiris.Modules
+            @{
+                UserInfo userInfo = (UserInfo)Session["userInfo"];
+                string userName = userInfo.UserName;
+            }
+            var InsertString = "------------------------" + ToDayDateTime + "-----------------------\r\n" + "@userName" + "\r\n";
+
+            if (isEmpty($("#CommonMemo").val())) {
+                $("#CommonMemo").val(InsertString);
+            } else {
+                $("#CommonMemo").val($("#CommonMemo").val() + "\r\n\r\n\r\n" + InsertString);
+            }
+            $('#CommonMemo').focus();
+
+        });
+
+        // 共通メモの保存ボタン押下時
+        $('#EntryCommonMemoBtn').on('click', function (e) {
+            e.preventDefault();
+            swal({
+                title: "共通メモ登録確認",
+                text: "変更内容を保存しますか？",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+            .then((rst) => {
+                if (rst) $('#EntryCommonMemoForm').submit();
+            });
+        });
+
+        // 共通メモを閉じる時に変更があったらアラート
+        $('#CommonMemoModal').on('hide.bs.modal', function (e) {
+            //e.preventDefault();
+            if ($("#CommonMemo").val() != "@cMemo") {
+                swal({
+                    title: "共通メモ変更破棄確認",
+                    text: "変更した内容が全て失われますが宜しいですか？",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                })
+                    .then((rst) => {
+                        if (rst) return true;
+                        else return false;
+                    });
+            }
+            return true;
+        });
+
+        // 個人経由選択時、不要項目グレーアウト
+        $("#R001").click(function () {
+            $("#VendorID").prop("disabled", true);
+            $("#DistributorID").prop("disabled", true);
+            $("#CodCost").prop("disabled", true);
+            $("#Shop").prop("disabled", true);
+            $("#InvoiceNo").prop("disabled", true);
+        });
+        // 代理店経由選択時、グレーアウト解除
+        $("#R002").click(function () {
+            $("#VendorID").prop("disabled", false);
+            $("#DistributorID").prop("disabled", false);
+            $("#CodCost").prop("disabled", false);
+            $("#Shop").prop("disabled", false);
+            $("#InvoiceNo").prop("disabled", false);
+        });
+
+        // 日付選択のカレンダー表示 + 不正日付のチェック
+        $('#ArrivalDate').datepicker({
+            dateFormat: 'yy/mm/dd',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            showOtherMonths: true
+        });
+
+        // （入荷日）不正日付チェック
+        $("#ArrivalDate").change(function () {
+            if ($(this).val() != '') {
+                var inputDate = new Date($(this).val());
+                if (isNaN(inputDate.getTime()) || $(this).val().length != 10) {
+                    alert("不正な日付です！");
+                    $(this).addClass("is-invalid");
+                    $(this).select();
+                    return false;
+                }
+                $(this).removeClass("is-invalid");
+                return true;
+            }
+        });
+
+        // 今日ボタンクリック処理
+        $("#ToDay").on("click", function () {
+            var dt = new Date();
+            var y = dt.getFullYear();
+            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
+            var d = ("00" + dt.getDate()).slice(-2);
+            $("#ArrivalDate").val(y + "/" + m + "/" + d);
+        });
+        // -1日ボタンクリック処理
+        $("#MinusDay").on("click", function () {
+            var strArrivalDate = $("#ArrivalDate").val();
+            // 空だったら昨日をセット
+            if (isEmpty(strArrivalDate)) {
+                var dt = new Date();
+            } else {
+                var dt = new Date(strArrivalDate);
+            }
+            dt.setDate(dt.getDate() - 1);
+            var y = dt.getFullYear();
+            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
+            var d = ("00" + dt.getDate()).slice(-2);
+            $("#ArrivalDate").val(y + "/" + m + "/" + d);
+        });
+        // +1日ボタンクリック処理
+        $("#PlusDay").on("click", function () {
+            var strArrivalDate = $("#ArrivalDate").val();
+            // 空だったら明日をセット
+            if (isEmpty(strArrivalDate)) {
+                var dt = new Date();
+            } else {
+                var dt = new Date(strArrivalDate);
+            }
+            dt.setDate(dt.getDate() + 1);
+            var y = dt.getFullYear();
+            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
+            var d = ("00" + dt.getDate()).slice(-2);
+            $("#ArrivalDate").val(y + "/" + m + "/" + d);
+        });
+
+        // 代理店選択時に入荷元／返送先情報を自動入力
+        $("#DistributorID").change(function () {
+
+            var param = {
+                prmDistributorID: $("#DistributorID").val()
+            }
+
+            $.ajax({
+                url: '@Url.Action("GetDistributorInfo", "Acceptance")',
+                type: "GET",
+                data: param
+            }).done(function (data, status, xhr) {
+                // 正常時
+                $("#ArrCustomerName").val(data["CustomerName"]);
+                $("#ArrPostalCode").val(data["PostalCode"]);
+                $("#ArrAddress1").val(data["Address1"]);
+                $("#ArrAddress2").val(data["Address2"]);
+                $("#ArrCorporateName").val(data["CorporateName"]);
+                $("#ArrTelNo1").val(data["TelNo1"]);
+                $("#ArrFaxNo").val(data["FaxNo"]);
+                $("#RtnCustomerName").val(data["RtnCustomerName"]);
+                $("#RtnPostalCode").val(data["RtnPostalCode"]);
+                $("#RtnAddress1").val(data["RtnAddress1"]);
+                $("#RtnAddress2").val(data["RtnAddress2"]);
+                $("#RtnCorporateName").val(data["RtnCorporateName"]);
+                $("#RtnTelNo1").val(data["RtnTelNo1"]);
+                $("#RtnFaxNo").val(data["RtnFaxNo"]);
+            }).fail(function (xhr, status, error) {
+                // 異常時
+                alert(error);
+            });
+        });
+
+        // 住所取得ボタン押下時に住所情報を自動入力
+        $("#getArrAddressBtn").on("click", function () {
+            AjaxZip3.zip2addr('ArrPostalCode', '', 'ArrAddress1', 'ArrAddress1');
+            $("#ArrAddress2").val("");
+        });
+
+        // 返送先有無を選択時の処理
+        $('input:radio[name="ReturnFlg"]').change(function () {
+            if ($('input:radio[name="ReturnFlg"]:checked').val() == '0') {
+                $("#RtnCustomerName").prop("disabled", true);
+                $("#RtnPostalCode").prop("disabled", true);
+                $("#RtnAddress1").prop("disabled", true);
+                $("#RtnAddress2").prop("disabled", true);
+                $("#RtnCorporateName").prop("disabled", true);
+                $("#RtnTelNo1").prop("disabled", true);
+                $("#RtnFaxNo").prop("disabled", true);
+                $("#getRtnAddressBtn").prop("disabled", true);
+            } else {
+                $("#RtnCustomerName").prop("disabled", false);
+                $("#RtnPostalCode").prop("disabled", false);
+                $("#RtnAddress1").prop("disabled", false);
+                $("#RtnAddress2").prop("disabled", false);
+                $("#RtnCorporateName").prop("disabled", false);
+                $("#RtnTelNo1").prop("disabled", false);
+                $("#RtnFaxNo").prop("disabled", false);
+                $("#getRtnAddressBtn").prop("disabled", false);
+            }
+        });
+
+        // 住所取得ボタン押下時に住所情報を自動入力
+        $("#getRtnAddressBtn").on("click", function () {
+            AjaxZip3.zip2addr('RtnPostalCode', '', 'RtnAddress1', 'RtnAddress1');
+            $("#RtnAddress2").val("");
+        });
+    });
+</script>
