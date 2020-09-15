@@ -1,0 +1,147 @@
+﻿@model Osiris.Models.AcceptanceModels
+@{
+    ViewBag.Title = "受付 Step3";
+}
+<link href="~/Content/Acceptance.css" rel="stylesheet" />
+@using (Html.BeginForm())
+{
+    <header class="sticky-top" style="top:40px; background-color:white; padding-top:10px; padding-bottom: 1px;">
+        @Html.Partial("_Header")
+    </header>
+    <main class="mb-5">
+        <div class="normal-box5-red">
+            <p>登録内容を確認して下さい。</p>
+        </div>
+        <div class="form-row" style="margin-top:20px;">
+            <div class="col-md-5">
+                <div class="input-group" style="height:38px;">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" style="color:white; background-color: #007bff; border-color: #007bff;">種別</span>
+                    </div>
+                    <input type="text" class="form-control" id="route" readonly="readonly" style="width:150px; background-color:orange; flex:unset;" value="" />
+                </div>
+                <!-- 代理店情報 ------------------------------------------------------------------------------>
+                <table class="table table-bordered table-sm table-hover table-condensed">
+                    <tr>
+                        <td colspan="2" class="bg-orange" style="background-color:#FF6600">代理店情報</td>
+                    </tr>
+                    <tr>
+                        <td style="width:100px; vertical-align: middle;">販路</td>
+                        <td>@Model.VendorName</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">代理店</td>
+                        <td>@Model.DistributorName</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">着払い金額</td>
+                        <td>@Model.CodCost</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">取扱店</td>
+                        <td>@Model.Shop</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">請求書番号</td>
+                        <td>@Model.InvoiceNo</td>
+                    </tr>
+                </table>
+                <!-- 入荷元情報 ------------------------------------------------------------------------------>
+                <div class="form-row" style="margin-top: 30px;">
+                    <div class="input-group col-md-7">
+                        <table class="table table-bordered table-sm table-hover table-condensed">
+                            <tr>
+                                <td colspan="2" class="bg-warning">入荷元情報</td>
+                            </tr>
+                            <tr>
+                                <td style="width:100px; vertical-align: middle;">顧客名</td>
+                                <td>@Model.ArrCustomerName</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">郵便番号</td>
+                                <td>@Model.ArrPostalCode</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">住所①</td>
+                                <td>@Model.ArrAddress1</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">住所②</td>
+                                <td>@Model.ArrAddress2</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">法人名</td>
+                                <td>@Model.ArrCorporateName</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">電話番号①</td>
+                                <td>@Model.ArrTelNo1</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">ＦＡＸ番号</td>
+                                <td>@Model.ArrFaxNo</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="box24">
+                            <p>送り状と一致していること。</p>
+                        </div>
+                        <img style="max-width:100%;" src="~/Content/img/ArrivalSample01.jpg" alt="入荷元サンプル１" id="ArrivalSample01" />
+                    </div>
+                </div>
+                <!-- 返送先情報入力 ------------------------------------------------------------------------------>
+                <table class="table table-bordered table-sm table-hover table-condensed">
+                    <tr>
+                        <td colspan="2" class="bg-warning">返送先情報</td>
+                    </tr>
+                    <tr>
+                        <td style="width:75px; vertical-align: middle;">顧客名</td>
+                        <td>@Model.RtnCustomerName</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">郵便番号</td>
+                        <td>@Model.RtnPostalCode</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">住所①</td>
+                        <td>@Model.RtnAddress1</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">住所②</td>
+                        <td>@Model.RtnAddress2</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">法人名</td>
+                        <td>@Model.RtnCorporateName</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">電話番号①</td>
+                        <td>@Model.RtnTelNo1</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">ＦＡＸ番号</td>
+                        <td>@Model.RtnFaxNo</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-6 slide-fixed">
+                <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
+                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
+            </div>
+        </div>
+    </main>
+}
+<script type="text/javascript">
+    $(function () {
+        // 読込み時の初期設定
+        // 経由
+        if (isEmpty("@Model.VendorID")) {
+            $("#route").val("個人経由");
+        } else {
+            $("#route").val("代理店経由")
+        }
+    });
+</script>

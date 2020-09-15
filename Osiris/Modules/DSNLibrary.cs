@@ -92,12 +92,5 @@ namespace Osiris.Modules
             Console.WriteLine(exception.Message);
         }
 
-        // シングルコーテーションエスケープ Utility
-        public string SingleEscape(string param)
-        {
-            if (!string.IsNullOrEmpty(param)) param = param.Replace("'", "''");
-
-            return param;
-        }
     }
 }

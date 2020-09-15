@@ -1,4 +1,4 @@
-﻿@model Osiris.Models.Acceptance1Models
+﻿@model Osiris.Models.AcceptanceModels
 @{
     ViewBag.Title = "受付 Step1";
 }
@@ -256,6 +256,18 @@
 </div>
 <script type="text/javascript">
     $(function () {
+        // 読込み時の初期設定
+        // 経由
+        if (isEmpty($("#VendorID").val())) {
+            $("#R001").prop("checked", true);
+            setPerRoute();
+        } else {
+            $("#R002").prop("checked", true);
+            setDistRoute();
+        }
+        // 返送先変更
+        SetRtnChgYN();
+
 
         // 新規登録時（処理が長くなりそうなので処理状況を表示）
         @*var NewEntryFlg = "@ViewBag.NewEntryFlg";
@@ -316,9 +328,6 @@
         //    }
         //});
 
-        // フラグの初期セット
-
-
         // 受付番号のCボタン押下時
         $("#RcpNoCopyBtn").click(function () {
             $("#ReceptionNumber").select();
@@ -374,9 +383,9 @@
                 buttons: true,
                 dangerMode: true,
             })
-            .then((rst) => {
-                if (rst) $('#EntryCommonMemoForm').submit();
-            });
+                .then((rst) => {
+                    if (rst) $('#EntryCommonMemoForm').submit();
+                });
         });
 
         // 共通メモを閉じる時に変更があったらアラート
@@ -399,20 +408,27 @@
         });
 
         // 個人経由選択時、不要項目グレーアウト
-        $("#R001").click(function () {
+        function setPerRoute() {
             $("#VendorID").prop("disabled", true);
             $("#DistributorID").prop("disabled", true);
             $("#CodCost").prop("disabled", true);
             $("#Shop").prop("disabled", true);
             $("#InvoiceNo").prop("disabled", true);
-        });
+        };
         // 代理店経由選択時、グレーアウト解除
-        $("#R002").click(function () {
+        function setDistRoute() {
             $("#VendorID").prop("disabled", false);
             $("#DistributorID").prop("disabled", false);
             $("#CodCost").prop("disabled", false);
             $("#Shop").prop("disabled", false);
             $("#InvoiceNo").prop("disabled", false);
+        };
+
+        $("#R001").click(function () {
+            setPerRoute();
+        });
+        $("#R002").click(function () {
+            setDistRoute();
         });
 
         // 日付選択のカレンダー表示 + 不正日付のチェック
@@ -518,7 +534,7 @@
         });
 
         // 返送先有無を選択時の処理
-        $('input:radio[name="ReturnFlg"]').change(function () {
+        function SetRtnChgYN() {
             if ($('input:radio[name="ReturnFlg"]:checked').val() == '0') {
                 $("#RtnCustomerName").prop("disabled", true);
                 $("#RtnPostalCode").prop("disabled", true);
@@ -538,6 +554,10 @@
                 $("#RtnFaxNo").prop("disabled", false);
                 $("#getRtnAddressBtn").prop("disabled", false);
             }
+        };
+
+        $('input:radio[name="ReturnFlg"]').change(function() {
+            SetRtnChgYN();
         });
 
         // 住所取得ボタン押下時に住所情報を自動入力

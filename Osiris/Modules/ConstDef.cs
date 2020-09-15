@@ -31,5 +31,8 @@ namespace Osiris.Modules
 
         // 1画面に表示する行数
         public const int PAGE_ROW_SIZE = 300;
+
+        // 帳票に表示しない付属品
+        public static readonly string[] HIDE_REPORT_ACC_INIT = { "代理店伝票", "販売店伝票", "お客様メモ", "店メモ", "送り状" };
     }
 }

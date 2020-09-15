@@ -1,4 +1,4 @@
-﻿@model Osiris.Models.Acceptance1Models
+﻿@model Osiris.Models.AcceptanceModels
 <div class="row">
     <div class="input-group col-md-3">
         <div class="input-group-prepend">
@@ -45,7 +45,7 @@
             </tr>
             <tr>
                 <td>製品型番</td>
-                <td>@Model.ModelNumber</td>
+                <td>@Model.ModelName</td>
             </tr>
             <tr>
                 <td>シリアル</td>
@@ -100,6 +100,7 @@
         </div>
     </div>
 </div>
+<hr class="hr-acpt" style="margin-top:20px;" />
 <!-- パンくず -->
 <div style="text-align:center; margin-top:15px;">
     <div class="breadcrumb">
@@ -128,4 +129,3 @@
         }
     </div>
 </div>
-<hr class="hr-acpt" />

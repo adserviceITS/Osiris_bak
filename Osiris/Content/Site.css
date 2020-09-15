@@ -50,6 +50,13 @@ label {
     background-color: #FF9900;
 }
 
+.inputNum {
+    text-align: right;
+}
+    .inputNum:before {
+        content: "\0a5";
+    }
+
 /* nav bar */
 * {
     box-sizing: border-box;

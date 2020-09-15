@@ -23,11 +23,11 @@ namespace Osiris.Modules
             SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
             sqlRdr.Read();
 
-            UserName = sqlRdr["ユーザー"].ToString();
-            DisplayOrder = sqlRdr["表示順"].ToString();
-            EffectiveFLG = sqlRdr["有効フラグ"].ToString();
-            ID = sqlRdr["ログイン名"].ToString();
-            Password = sqlRdr["パスワード"].ToString();
+            UserName = sqlRdr.GetValue<string>("ユーザー");
+            DisplayOrder = sqlRdr.GetValue<int>("表示順").ToString();
+            EffectiveFLG = sqlRdr.GetValue<string>("有効フラグ");
+            ID = sqlRdr.GetValue<string>("ログイン名");
+            Password = sqlRdr.GetValue<string>("パスワード");
 
             sqlRdr.Close();
             dsnLib.DB_Close();

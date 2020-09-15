@@ -130,12 +130,12 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\Acceptance1Models.cs" />
-    <Compile Include="Models\Acceptance2Models.cs" />
+    <Compile Include="Models\AcceptanceModels.cs" />
     <Compile Include="Models\LoginModels.cs" />
     <Compile Include="Modules\ConstDef.cs" />
     <Compile Include="Modules\DropDownList.cs" />
     <Compile Include="Modules\DSNLibrary.cs" />
+    <Compile Include="Modules\ExtensionMethods.cs" />
     <Compile Include="Modules\UserInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -159,6 +159,8 @@
     <Content Include="Content\img\ArrivalSample01.jpg" />
     <Content Include="Content\img\DistributorSample01.jpg" />
     <Content Include="Content\img\DistributorSample02.jpg" />
+    <Content Include="Content\img\ProductSample01.jpg" />
+    <Content Include="Content\img\ProductSample02.jpg" />
     <Content Include="Content\img\ReturnSample01.jpg" />
     <Content Include="Content\jquery-ui.css" />
     <Content Include="Content\jquery-ui.min.css" />
@@ -328,6 +330,7 @@
     <Content Include="Views\Acceptance\_Header.cshtml" />
     <Content Include="Views\Main\Top.cshtml" />
     <Content Include="Views\Acceptance\Acceptance2.cshtml" />
+    <Content Include="Views\Acceptance\Acceptance3.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

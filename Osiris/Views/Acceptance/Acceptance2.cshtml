@@ -1,4 +1,4 @@
-﻿@model Osiris.Models.Acceptance2Models
+﻿@model Osiris.Models.AcceptanceModels
 @{
     ViewBag.Title = "受付 Step2";
 }
@@ -9,5 +9,284 @@
         @Html.Partial("_Header")
     </header>
     <main class="mb-5">
+        <!-- 製品情報入力 ------------------------------------------------------------------------------>
+        <div class="form-row">
+            <div class="input-group col-md-4">
+                <table class="table table-bordered table-sm table-hover table-condensed">
+                    <tr>
+                        <td colspan="2" style="background-color:#CCFFFF;">製品情報を入力してください。</td>
+                    </tr>
+                    <tr>
+                        <td style="width:90px; vertical-align: middle;">シリアル</td>
+                        <td>@Html.TextBoxFor(model => model.SerialNo, null, new { @class = "form-control", placeholder = "シリアルを入力して下さい", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">商品名</td>
+                        <td>
+                            @Html.DropDownListFor(
+                                model => model.ProductID, // プロパティ
+                                new SelectList(Model.DropDownListProduct, "ProductID", "ProductName"),
+                                "",
+                                new { @class = "form-control form-control-sm", style = "border:unset;" }
+                            )
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">製品型番</td>
+                        <td>
+                            @Html.DropDownListFor(
+                                model => model.ModelNumber, // プロパティ
+                                new SelectList(Model.DropDownListModel, "ModelNumber", "ModelName"),
+                                "",
+                                new { @class = "form-control form-control-sm", style = "border:unset;" }
+                            )
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">購入日</td>
+                        <td>@Html.TextBoxFor(model => model.BuyDate, null, new { @class = "form-control", placeholder = "カレンダー選択", style = "max-width: 120px;" })</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">保証期間/日</td>
+                        <td><p id="WarrantyPeriod" style="margin:unset;">@Model.WarrantyPeriod</p></td >
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: middle;">保証コード</td>
+                        <td><p id="WarrantyName" style="margin:unset;">@Model.WarrantyName</p></td>
+                        @Html.HiddenFor(model => model.WarrantyCode)
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-1"></div>
+            <div class="input-group col-md-7 row" style="margin:unset;">
+                <img style="max-width:50%;" src="~/Content/img/ProductSample01.jpg" alt="代理店サンプル１" id="DistributorSample01" />
+                <img style="max-width:50%; padding-left: 5px;" src="~/Content/img/ProductSample02.jpg" alt="代理店サンプル２" id="DistributorSample02" />
+            </div>
+        </div>
+        <!-- 指摘情報入力 ------------------------------------------------------------------------------>
+        <div class="form-row" style="margin-top:30px;">
+            <div class="col-md-5">
+                <p class="bg-danger text-white" style="margin:unset; font-size:16px; text-align:center;">指摘症状</p>
+                @Html.TextAreaFor(model => model.PointOutProblem, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "指摘症状を入力して下さい" })
+            </div>
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-5">
+                <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
+                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
+            </div>
+        </div>
+        <!-- 付属品情報入力 ------------------------------------------------------------------------------>
+        <div class="form-row" style="margin-top:30px;">
+            <div class="col-md-5">
+                <table class="table table-bordered table-sm table-hover table-condensed" id="ShowReportAccTbl" style="width:450px;">
+                    <thead>
+                        <tr style="background-color:#CCFFFF;">
+                            <td style="width:300px;">付属品名（帳票に表示する）</td>
+                            <td style="width:75px;">数量</td>
+                            <td style="width:75px;">画像</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.ShowReportAccLists.Count(); i++)
+                        {
+                            <tr>
+                                <td><p id="ShowReportAccName" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccName</p></td>
+                                @Html.HiddenFor(model => Model.ShowReportAccLists[i].ShowReportAccName)
+                                <td>@Html.TextBoxFor(model => Model.ShowReportAccLists[i].ShowReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
+                                <td><p id="ShowReportAccIMG" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccIMG</p></td>
+                            </tr>
+                        }
+                        </tbody>
+                </table>
+            </div>
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-5">
+                <table class="table table-bordered table-sm table-hover table-condensed" id="HideReportAccTbl">
+                    <thead>
+                        <tr style="background-color:#FFFF33; color:red">
+                            <td style="width:300px;">付属品名（帳票に表示しない）</td>
+                            <td style="width:75px;">数量</td>
+                            <td style="width:75px;">画像</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.HideReportAccLists.Count(); i++)
+                        {
+                        <tr>
+                            <td><p id="HideReportAccName" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccName</p></td>
+                            @Html.HiddenFor(model => Model.HideReportAccLists[i].HideReportAccName)
+                            <td>@Html.TextBoxFor(model => Model.HideReportAccLists[i].HideReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
+                            <td><p id="HideReportAccIMG" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccIMG</p></td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- タグ関係 ------------------------------------------------------------------------------>
+        <div class="form-row" style="margin-top:20px;">
+            <div class="col-md-5" style="font-size: 18px;">
+                <button class="btn btn-primary btn-lg" style="width:100%;" formaction="/Acceptance/CartonTag" id="CartonTagBtn">カートンTAG発行</button>
+                <button class="btn btn-primary btn-lg" style="width:100%; margin-top:20px;" formaction="/Acceptance/Tag" id="TagBtn">TAG発行</button>
+            </div>
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-5">
+                <div class="input-group" style="height:38px;">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" style="color:white; background-color:silver;">カートンロケ</span>
+                    </div>
+                    @Html.TextBoxFor(model => model.CartonLoc, null, new { @class = "form-control", placeholder = "カートンロケ入力", style = "max-width: 160px;" })
+                </div>
+            </div>
+        </div>
+        <!-- Step操作ボタン ------------------------------------------------------------------------------>
+        <div class="form-inline" style="text-align:right; display: block; margin-top: 30px; font-size: 18px;">
+            <button class="btn btn-primary btn-lg" style="width: 40%;" formaction="/Acceptance/NextToStep3" id="NextToStep3Btn">次へ</button>
+            <button class="btn btn-danger btn-lg" style="width: auto;" formaction="/Acceptance/BackToStep1" id="BackToStep1Btn">STEP１に戻る</button>
+        </div>
     </main>
 }
+
+<script type="text/javascript">
+    $(function () {
+
+        // 日付選択のカレンダー表示 + 不正日付のチェック
+        $('#BuyDate').datepicker({
+            dateFormat: 'yy/mm/dd',
+            showButtonPanel: true,
+            changeMonth: true,
+            changeYear: true,
+            showOtherMonths: true
+        });
+
+        // 商品が変更された時
+        $("#ProductID").change(function (e) {
+            e.preventDefault();
+
+            swal({
+                title: "商品を変更しますか？",
+                text: "※付属品の内容が初期化されます！",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+            .then((rst) => {
+                // 商品変更了承時
+                if (rst) {
+                    // データ属性を変更
+                    $.data(this, 'current', $(this).val());
+
+                    // 商品に合致する製品型番をコンボボックスに設定
+                    var param = {
+                        prmProductID: $("#ProductID").val()
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("GetModelDropDownList", "Acceptance")',
+                        type: "GET",
+                        data: param
+                    }).done(function (response) {
+                        // 正常時
+                        $("#ModelNumber").empty();
+                        $("#ModelNumber").append($('<option></option>'));
+                        $.each(response, function (index, item) {
+                            $("#ModelNumber").append($('<option></option>').text(item.ModelName).val(item.ModelNumber));
+                        });
+                    }).fail(function (xhr, status, error) {
+                        // 異常時
+                        alert(error);
+                    });
+
+                    // 帳票表示付属品内容のセット
+                    var param = {
+                        prmProductID: $("#ProductID").val()
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("GetShowReportAcc", "Acceptance")',
+                        type: "GET",
+                        data: param
+                    }).done(function (data) {
+                        // 正常時
+                        $("#ShowReportAccTbl tbody *").remove();
+                        $.each(data, function (index, value) {
+                            $("#ShowReportAccTbl tbody").append("<tr>");
+                            $("#ShowReportAccTbl tbody").append('<td><p id="ShowReportAccName" style="margin: unset;">' + value + '</p></td>');
+                            $("#ShowReportAccTbl tbody").append('<input id="ShowReportAccLists_' + index + '__ShowReportAccName" name="ShowReportAccLists[' + index + '].ShowReportAccName" type="hidden" value="' + value + '" />');
+                            $("#ShowReportAccTbl tbody").append('<td><input class="inputNum" data-val="true"  style = "width:50px" id="ShowReportAccLists_' + index + '__ShowReportAccQTY" name="ShowReportAccLists[' + index + '].ShowReportAccQTY" type="text" value="0" /></td>');
+                            $("#ShowReportAccTbl tbody").append('<td><p id="ShowReportAccIMG" style="margin:unset;"></p></td>');
+                            $("#ShowReportAccTbl tbody").append("</tr>");
+                        });
+                    }).fail(function (xhr, status, error) {
+                        // 異常時
+                        alert(error);
+                        });
+
+                    // 帳票非表示付属品内容のセット
+                    var param = {
+                        prmProductID: $("#ProductID").val()
+                    }
+
+                    $.ajax({
+                        url: '@Url.Action("GetHideReportAcc", "Acceptance")',
+                        type: "GET",
+                        data: param
+                    }).done(function (data) {
+                        // 正常時
+                        $("#HideReportAccTbl tbody *").remove();
+                        $.each(data, function (index, value) {
+                            $("#HideReportAccTbl tbody").append("<tr>");
+                            $("#HideReportAccTbl tbody").append('<td><p id="HideReportAccName" style="margin: unset;">' + value + '</p></td>');
+                            $("#HideReportAccTbl tbody").append('<input id="HideReportAccLists_' + index + '__HideReportAccName" name="HideReportAccLists[' + index + '].HideReportAccName" type="hidden" value="' + value + '" />');
+                            $("#HideReportAccTbl tbody").append('<td><input class="inputNum" data-val="true"  style = "width:50px" id="HideReportAccLists_' + index + '__HideReportAccQTY" name="HideReportAccLists[' + index + '].HideReportAccQTY" type="text" value="0" /></td>');
+                            $("#HideReportAccTbl tbody").append('<td><p id="HideReportAccIMG" style="margin:unset;"></p></td>');
+                            $("#HideReportAccTbl tbody").append("</tr>");
+                        });
+                    }).fail(function (xhr, status, error) {
+                        // 異常時
+                        alert(error);
+                    });
+                } else { // 変更取止め時
+                    $(this).val($.data(this, 'current'));
+                }
+            });
+        });
+
+        // 購入日変更時の保証コードの設定
+        $('#BuyDate').change(function () {
+            // 購入日が未入力
+            if (isEmpty($('#BuyDate').val())) {
+                $('#WarrantyName').text('購入日不明');
+                $('#WarrantyCode').val('15');
+                return;
+            }
+
+            var buyDate = new Date($('#BuyDate').val());
+            var buyDate2 = new Date($('#BuyDate').val());
+            var buyDate1ay = buyDate.setFullYear(buyDate.getFullYear() + 1);    // 購入日の1年後
+            var receptionDate = new Date("@Model.ReceptionDate");
+            var warrantyDate = buyDate2.setDate(buyDate2.getDate() + @Model.WarrantyPeriod);
+
+            // 受付日が購入日の1年以内
+            if (receptionDate <= buyDate1ay) {
+                $('#WarrantyName').text('メーカー保証');
+                $('#WarrantyCode').val('12');
+                return;
+            }
+
+            // 受付日が保証期間以内の場合
+            if (receptionDate <= warrantyDate) {
+                $('#WarrantyName').text('メーカー保証');
+                $('#WarrantyCode').val('12');
+                return;
+            } else {
+                $('#WarrantyName').text('保証期間外');
+                $('#WarrantyCode').val('10');
+            }
+
+        });
+    });
+</script>
