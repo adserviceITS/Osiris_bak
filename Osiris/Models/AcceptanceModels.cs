@@ -370,7 +370,8 @@ namespace Osiris.Models
             stbSql.Append("    コール受付.転送宅配 = '" + strDeliveryFlg + "', ");
             stbSql.Append("    コール受付.品質事故 = '" + strAccidentFlg + "', ");
             stbSql.Append("    コール受付.再修理 = '" + strReRepairFlg + "', ");
-            stbSql.Append("    コール受付.入荷日 = '" + DateTime.Parse(ArrivalDate) + "', ");
+            if(!string.IsNullOrEmpty(ArrivalDate))
+                stbSql.Append("    コール受付.入荷日 = '" + DateTime.Parse(ArrivalDate) + "', ");
             stbSql.Append("    コール受付.販売店名 = '" + VendorName.SingleEscape() + "', ");
             stbSql.Append("    コール受付.代理店名 = '" + DistributorName.SingleEscape() + "', ");
             stbSql.Append("    コール受付.着払い金額 = '" + CodCost + "', ");
@@ -526,7 +527,8 @@ namespace Osiris.Models
             stbSql.Append("    コール受付.シリアル番号 = '" + SerialNo + "', ");
             stbSql.Append("    コール受付.商品名 = '" + ProductName.SingleEscape() + "', ");
             stbSql.Append("    コール受付.型名 = '" + ModelName.SingleEscape() + "', ");
-            stbSql.Append("    コール受付.購入日 = '" + DateTime.Parse(BuyDate) + "', ");
+            if (!string.IsNullOrEmpty(BuyDate))
+                stbSql.Append("    コール受付.購入日 = '" + DateTime.Parse(BuyDate) + "', ");
             stbSql.Append("    コール受付.保証コード = '" + WarrantyCode + "', ");
             stbSql.Append("    コール受付.指摘症状 = '" + PointOutProblem.SingleEscape() + "', ");
             stbSql.Append("    コール受付.共通メモ = '" + CommonMemo.SingleEscape() + "', ");

@@ -39,5 +39,17 @@ namespace Osiris.Modules
 
             return param;
         }
+
+        // NULL変換 string
+        public static Object IsNUll(this Object param, Object objIsNull, Object objIsNotNull)
+        {
+            if (param == null)
+            {
+                return objIsNull;
+            } else
+            {
+                return objIsNotNull;
+            }
+        }
     }
 }
