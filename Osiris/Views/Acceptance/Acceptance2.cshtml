@@ -48,7 +48,7 @@
                     </tr>
                     <tr>
                         <td style="vertical-align: middle;">保証期間/日</td>
-                        <td><p id="WarrantyPeriod" style="margin:unset;">@Model.WarrantyPeriod</p></td >
+                        <td><p id="WarrantyPeriod" style="margin:unset;">@Model.WarrantyPeriod</p></td>
                     </tr>
                     <tr>
                         <td style="vertical-align: middle;">保証コード</td>
@@ -67,13 +67,13 @@
         <div class="form-row" style="margin-top:30px;">
             <div class="col-md-5">
                 <p class="bg-danger text-white" style="margin:unset; font-size:16px; text-align:center;">指摘症状</p>
-                @Html.TextAreaFor(model => model.PointOutProblem, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "指摘症状を入力して下さい" })
+                @Html.TextAreaFor(model => model.PointOutProblem, 15, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "指摘症状を入力して下さい" })
             </div>
             <div class="col-md-1">
             </div>
             <div class="col-md-5">
                 <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
-                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
+                @Html.TextAreaFor(model => model.CommonMemo, 15, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
             </div>
         </div>
         <!-- 付属品情報入力 ------------------------------------------------------------------------------>
@@ -97,7 +97,7 @@
                                 <td><p id="ShowReportAccIMG" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccIMG</p></td>
                             </tr>
                         }
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
             <div class="col-md-1">
@@ -114,12 +114,12 @@
                     <tbody>
                         @for (int i = 0; i < Model.HideReportAccLists.Count(); i++)
                         {
-                        <tr>
-                            <td><p id="HideReportAccName" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccName</p></td>
-                            @Html.HiddenFor(model => Model.HideReportAccLists[i].HideReportAccName)
-                            <td>@Html.TextBoxFor(model => Model.HideReportAccLists[i].HideReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
-                            <td><p id="HideReportAccIMG" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccIMG</p></td>
-                        </tr>
+                            <tr>
+                                <td><p id="HideReportAccName" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccName</p></td>
+                                @Html.HiddenFor(model => Model.HideReportAccLists[i].HideReportAccName)
+                                <td>@Html.TextBoxFor(model => Model.HideReportAccLists[i].HideReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
+                                <td><p id="HideReportAccIMG" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccIMG</p></td>
+                            </tr>
                         }
                     </tbody>
                 </table>
@@ -145,10 +145,12 @@
         <!-- Step操作ボタン ------------------------------------------------------------------------------>
         <div class="form-inline" style="text-align:right; display: block; margin-top: 30px; font-size: 18px;">
             <button class="btn btn-primary btn-lg" style="width: 40%;" formaction="/Acceptance/NextToStep3" id="NextToStep3Btn">次へ</button>
-            <button class="btn btn-danger btn-lg" style="width: auto;" formaction="/Acceptance/BackToStep1" id="BackToStep1Btn">STEP１に戻る</button>
+            <button class="btn btn-danger btn-lg" style="width: auto;" formaction="/Acceptance/BackToStep1FromStep2" id="BackToStep1Btn">STEP１に戻る</button>
         </div>
     </main>
 }
+<!-- モーダル ---------------------------------------------------------------------->
+@Html.Partial("_HeaderModal")
 
 <script type="text/javascript">
     $(function () {
@@ -252,6 +254,27 @@
                 } else { // 変更取止め時
                     $(this).val($.data(this, 'current'));
                 }
+            });
+        });
+
+        // 製品型番が変更された時、保証期間を変更
+        $("#ModelNumber").change(function (e) {
+            e.preventDefault();
+
+            // 製品型番に合致する保証期間を設定
+            var param = {
+                prmModelNumber: $("#ModelNumber").val()
+            }
+            $.ajax({
+                url: '@Url.Action("GetWarrantyPeriod", "Acceptance")',
+                type: "GET",
+                data: param
+            }).done(function (data) {
+                // 正常時
+                $("#WarrantyPeriod").text(data["WarrantyPeriod"]);
+            }).fail(function (xhr, status, error) {
+                // 異常時
+                alert(error);
             });
         });
 

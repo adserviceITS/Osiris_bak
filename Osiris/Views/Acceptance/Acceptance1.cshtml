@@ -11,6 +11,7 @@
         @Html.Partial("_Header")
     </header>
     <main class="mb-5">
+        @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", style = "font-size:16px;" })
         <!-- 経由トグル ---------------------------------------------------------------------------------->
         <div class="btn-group btn-group-toggle" data-toggle="buttons">
             <label class="btn btn-secondary active" style="font-size:16px;">
@@ -194,8 +195,9 @@
                 </table>
             </div>
             <div class="col-md-1"></div>
-            <div class="input-group col-md-7">
-                <img style="max-width:100%;" src="~/Content/img/ReturnSample01.jpg" alt="返送先サンプル１" id="ReturnSample01" />
+            <div class="col-md-7">
+                <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
+                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "", @readonly = "readonly" })
             </div>
         </div>
         <!-- ボタン類 ------------------------------------------------------------------------------>
@@ -205,55 +207,9 @@
         </div>
     </main>
 }
-<!-- こっからモーダル ---------------------------------------------------------------------->
-<!-- 処理状況モーダル ------------------------------------------------------------------------------>
-<div class="modal fade" tabindex="-1" role="dialog" id="ProgressModal" aria-labelledby="label1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">処理状況</h5>
-            </div>
-            <!-- Modal ボディー -->
-            <p id="ProgressMsg" style="margin: 15px;">処理を開始します。</p>
-            <div class="modal-body" style="width: 100%; padding: 15px">
-                <div class="progress progress-striped active" style="height:20px;">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%" id="pgss"></div>
-                </div>
-            </div>
-            <!-- Modal フッター -->
-            <div class="modal-footer">
-            </div>
-        </div>
-    </div>
-</div>
-<!-- 共通メモ ------------------------------------------------------------------------------>
-<div class="modal fade" tabindex="-1" role="dialog" id="CommonMemoModal" aria-labelledby="label1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">共通メモ</h5>
-                <button type="button" class="btn close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <form role="form" id="EntryCommonMemoForm" action="/Acceptance/EntryCommonMemo" method="POST">
-                <!-- Modal ボディー -->
-                <div class="modal-body">
-                    <button type="button" class="btn btn-primary" id="InsertDate" style="margin-bottom:10px;">日付挿入</button>
-                    <div class="form-row" style="margin-bottom: 10px;">
-                        @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
-                    </div>
-                </div>
-                @Html.HiddenFor(model => model.ReceptionNumber)
-                <!-- Modal フッター -->
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="EntryCommonMemoBtn">保存</button>
-                    <button type="button" class="btn btn-outline-dark pull-left" data-dismiss="modal">閉じる</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- モーダル ---------------------------------------------------------------------->
+@Html.Partial("_HeaderModal")
+
 <script type="text/javascript">
     $(function () {
         // 読込み時の初期設定
@@ -327,85 +283,6 @@
         //        return false;
         //    }
         //});
-
-        // 受付番号のCボタン押下時
-        $("#RcpNoCopyBtn").click(function () {
-            $("#ReceptionNumber").select();
-            document.execCommand('copy');
-        })
-
-        // 共通メモボタン押下時
-        $('#CommonMemoBtn').click(function () {
-            $('#CommonMemoModal').modal();
-            @{
-                string cMemo = Model.CommonMemo;
-                if (!string.IsNullOrEmpty(cMemo)) {
-                    cMemo = cMemo.Replace("\r\n", "\\r\\n");
-                }
-            }
-            $('#CommonMemo').val('@cMemo');
-        });
-
-        // 共通メモの日付挿入ボタンクリック時
-        $("#InsertDate").click(function () {
-            var dt = new Date();
-            var y = dt.getFullYear();
-            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
-            var d = ("00" + dt.getDate()).slice(-2);
-            var h = ("00" + dt.getHours()).slice(-2);
-            var mi = ("00" + dt.getMinutes()).slice(-2);
-            var s = ("00" + dt.getSeconds()).slice(-2);
-            var ToDayDateTime = y + "/" + m + "/" + d + " " + h + ":" + mi + ":" + s
-
-            @using Osiris.Modules
-            @{
-                UserInfo userInfo = (UserInfo)Session["userInfo"];
-                string userName = userInfo.UserName;
-            }
-            var InsertString = "------------------------" + ToDayDateTime + "-----------------------\r\n" + "@userName" + "\r\n";
-
-            if (isEmpty($("#CommonMemo").val())) {
-                $("#CommonMemo").val(InsertString);
-            } else {
-                $("#CommonMemo").val($("#CommonMemo").val() + "\r\n\r\n\r\n" + InsertString);
-            }
-            $('#CommonMemo').focus();
-
-        });
-
-        // 共通メモの保存ボタン押下時
-        $('#EntryCommonMemoBtn').on('click', function (e) {
-            e.preventDefault();
-            swal({
-                title: "共通メモ登録確認",
-                text: "変更内容を保存しますか？",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            })
-                .then((rst) => {
-                    if (rst) $('#EntryCommonMemoForm').submit();
-                });
-        });
-
-        // 共通メモを閉じる時に変更があったらアラート
-        $('#CommonMemoModal').on('hide.bs.modal', function (e) {
-            //e.preventDefault();
-            if ($("#CommonMemo").val() != "@cMemo") {
-                swal({
-                    title: "共通メモ変更破棄確認",
-                    text: "変更した内容が全て失われますが宜しいですか？",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true,
-                })
-                    .then((rst) => {
-                        if (rst) return true;
-                        else return false;
-                    });
-            }
-            return true;
-        });
 
         // 個人経由選択時、不要項目グレーアウト
         function setPerRoute() {

@@ -141,6 +141,41 @@ namespace Osiris.Modules
 
             return DropDownListModel;
         }
+
+        // 修理ステータス
+        public List<CombRepairStatus> GetDropDownListRepairStatus()
+        {
+            DSNLibrary dsnLib = new DSNLibrary();
+            StringBuilder stbSql = new StringBuilder();
+
+            stbSql.Append("SELECT ");
+            stbSql.Append("    修理ステータスマスタ.ステータス番号, ");
+            stbSql.Append("    修理ステータスマスタ.ステータス名 ");
+            stbSql.Append("FROM ");
+            stbSql.Append("    修理ステータスマスタ ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("    (修理ステータスマスタ.削除フラグ = '0' OR 修理ステータスマスタ.削除フラグ is NULL) AND ");
+            stbSql.Append("    修理ステータスマスタ.ステータス表示ラベル = '修理' ");
+            stbSql.Append("ORDER BY ");
+            stbSql.Append("    修理ステータスマスタ.序列 ");
+
+            SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+
+            List<CombRepairStatus> DropDownListRepairStatus = new List<CombRepairStatus>();
+
+            while (sqlRdr.Read())
+            {
+                DropDownListRepairStatus.Add(new CombRepairStatus
+                {
+                    RepairStatusNo = sqlRdr.GetValue<string>("ステータス番号"),
+                    RepairStatusName = sqlRdr.GetValue<string>("ステータス名")
+                });
+            }
+            sqlRdr.Close();
+            dsnLib.DB_Close();
+
+            return DropDownListRepairStatus;
+        }
     }
 
     public class CombVendor
@@ -165,5 +200,11 @@ namespace Osiris.Modules
     {
         public string ModelNumber { get; set; }
         public string ModelName { get; set; }
+    }
+
+    public class CombRepairStatus
+    {
+        public string RepairStatusNo { get; set; }
+        public string RepairStatusName { get; set; }
     }
 }

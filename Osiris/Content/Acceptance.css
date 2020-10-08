@@ -176,5 +176,6 @@ div.modal div.modal-backdrop {
 
 .slide-fixed {
     position: sticky;
-    top: 500px;
+    top: 302px;
+    align-self: baseline;
 }

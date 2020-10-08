@@ -16,6 +16,7 @@ namespace Osiris.Models
         public IEnumerable<CombDistributor> DropDownListDistributor { get; set; }
         public IEnumerable<CombProduct> DropDownListProduct { get; set; }
         public IEnumerable<CombModel> DropDownListModel { get; set; }
+        public IEnumerable<CombRepairStatus> DropDownListRepairStatus { get; set; }
 
         public string ReceptionNumber { get; set; }     // 受付番号
         public string Status { get; set; }              // ステータス
@@ -64,6 +65,8 @@ namespace Osiris.Models
         public List<ShowReportAccList> ShowReportAccLists { get; set; }
         public List<HideReportAccList> HideReportAccLists { get; set; }
         public string CartonLoc { get; set; }           // カートンロケ
+        public string RepairStatusNo { get; set; }      // 修理ステータス番号
+        public string AlertMsg { get; set; }            // アラートメッセージ
 
         // コンストラクタ
         public AcceptanceModels()
@@ -72,6 +75,7 @@ namespace Osiris.Models
             DropDownListDistributor = Enumerable.Empty<CombDistributor>();
             DropDownListProduct = Enumerable.Empty<CombProduct>();
             DropDownListModel = Enumerable.Empty<CombModel>();
+            DropDownListRepairStatus = Enumerable.Empty<CombRepairStatus>();
             ShowReportAccLists = new List<ShowReportAccList>();
             HideReportAccLists = new List<HideReportAccList>();
         }
@@ -102,6 +106,13 @@ namespace Osiris.Models
             // 製品型番ドロップダウンリストを取得
             DropDownList ddList = new DropDownList();
             DropDownListModel = ddList.GetDropDownListModel(strProductID);
+        }
+
+        public void SetDropDownListRepairStatus()
+        {
+            // 修理ステータスドロップダウンリストを取得
+            DropDownList ddList = new DropDownList();
+            DropDownListRepairStatus = ddList.GetDropDownListRepairStatus();
         }
 
         public void SetReceptionNumber()
@@ -203,6 +214,7 @@ namespace Osiris.Models
             stbSql.Append("    販売店マスタ.ID AS 販路ID, ");
             stbSql.Append("    代理店マスタ.ID AS 代理店ID, ");
             stbSql.Append("    保証コードマスタ.保証コード名 AS 保証コード名 ");
+            //stbSql.Append("    ARRCPT_アラートマスタ.メッセージ ");
             stbSql.Append("FROM ");
             stbSql.Append("    コール受付 LEFT JOIN ステータスマスタ ON ");
             stbSql.Append("    コール受付.ステータス = ステータスマスタ.ステータス番号 ");
@@ -217,8 +229,13 @@ namespace Osiris.Models
             stbSql.Append("    コール受付.代理店名 = 代理店マスタ.代理店名 ");
             stbSql.Append("    LEFT JOIN 保証コードマスタ ON ");
             stbSql.Append("    コール受付.保証コード = 保証コードマスタ.保証コード ");
+            //stbSql.Append("    LEFT JOIN ");
+            //stbSql.Append("       (SELECT * FROM アラートマスタ ");
+            //stbSql.Append("        WHERE 修理ステータス = '" + ConstDef.CPL_ARR_REP_STTS_CD + "' ");
+            //stbSql.Append("       ) ARRCPT_アラートマスタ ON ");
+            //stbSql.Append("    コール受付.受付番号 = ARRCPT_アラートマスタ.受付番号 ");
             stbSql.Append("WHERE ");
-            stbSql.Append("    受付番号 = '" + ReceptionNumber + "' ");
+            stbSql.Append("    コール受付.受付番号 = '" + ReceptionNumber + "' ");
 
             SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
             sqlRdr.Read();
@@ -270,7 +287,7 @@ namespace Osiris.Models
             ReRepairFlg = sqlRdr.GetValue<bool>("再修理");                                          // 再修理
             CommonMemo = sqlRdr.GetValue<string>("共通メモ");                                    // 共通メモ
             CodCost = sqlRdr.GetValue<int>("着払い金額");                  // 着払い金額（COD：Cash-On-Delivery）
-            Shop = sqlRdr.GetValue<string>("購入店");                                            // 取扱店
+            Shop = sqlRdr.GetValue<string>("取扱店");                                            // 取扱店
             InvoiceNo = sqlRdr.GetValue<string>("請求書番号");                                   // 請求書番号
             ArrCustomerName = sqlRdr.GetValue<string>("顧客名");                                 // 入荷元顧客名
             ArrPostalCode = sqlRdr.GetValue<string>("郵便番号");                                 // 入荷元郵便番号
@@ -292,6 +309,8 @@ namespace Osiris.Models
             WarrantyName = sqlRdr.GetValue<string>("保証コード名");                               // 保証名
             PointOutProblem = sqlRdr.GetValue<string>("指摘症状");                               // 指摘症状
             CartonLoc = sqlRdr.GetValue<string>("カートンロケ");                               // カートンロケ
+            //AlertMsg = sqlRdr.GetValue<string>("メッセージ");                                    // アラートメッセージ
+            AlertMsg = "";
 
             sqlRdr.Close();
             stbSql.Clear();
@@ -439,7 +458,6 @@ namespace Osiris.Models
 
             SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
 
-            // 何も表示するものがなかったら初期値をセット
             if (sqlRdr.HasRows)
             {
                 while (sqlRdr.Read())
@@ -452,14 +470,16 @@ namespace Osiris.Models
                         HideReportAccIMG = ""
                     });
                 }
-            } else
+            } else      // 何も表示するものがなかったら初期値をセット
             {
-                for (int i = 0; i < ConstDef.HIDE_REPORT_ACC_INIT.Length; i++)
+                List<ConstValue> constList = ExtensionMethods.GetConstValue(ConstDef.HIDE_REPORT_ACC_INIT_CD);
+
+                foreach (ConstValue item in constList)
                 {
                     HideReportAccLists.Add(new HideReportAccList
                     {
-                        HideReportAccID = "",
-                        HideReportAccName = ConstDef.HIDE_REPORT_ACC_INIT[i],
+                        HideReportAccID = item.ConstCd,
+                        HideReportAccName = item.Value,
                         HideReportAccQTY = 0,
                         HideReportAccIMG = ""
                     });
@@ -518,6 +538,17 @@ namespace Osiris.Models
             string strAccidentFlg = AccidentFlg ? "1" : "0";
             string strReRepairFlg = ReRepairFlg ? "1" : "0";
 
+            // 共通メモに帳票非表示付属品を追記
+            string strCommonMemo = CommonMemo.SingleEscape();
+            for (int i = 0; i < HideReportAccLists.Count; i++)
+            {
+                if (HideReportAccLists[i].HideReportAccQTY != 0) {
+                    strCommonMemo = strCommonMemo + "\r\n" +
+                                    HideReportAccLists[i].HideReportAccName + "　" +
+                                    "数量：" + HideReportAccLists[i].HideReportAccQTY;
+                }
+            }
+
             stbSql.Append("UPDATE コール受付 ");
             stbSql.Append("SET ");
             stbSql.Append("    コール受付.転送チャーター = '" + strCharterFlg + "', ");
@@ -531,7 +562,7 @@ namespace Osiris.Models
                 stbSql.Append("    コール受付.購入日 = '" + DateTime.Parse(BuyDate) + "', ");
             stbSql.Append("    コール受付.保証コード = '" + WarrantyCode + "', ");
             stbSql.Append("    コール受付.指摘症状 = '" + PointOutProblem.SingleEscape() + "', ");
-            stbSql.Append("    コール受付.共通メモ = '" + CommonMemo.SingleEscape() + "', ");
+            stbSql.Append("    コール受付.共通メモ = '" + strCommonMemo + "', ");
             stbSql.Append("    コール受付.カートンロケ = '" + CartonLoc + "' ");
             stbSql.Append("WHERE ");
             stbSql.Append("    コール受付.受付番号 = '" + ReceptionNumber + "' ");

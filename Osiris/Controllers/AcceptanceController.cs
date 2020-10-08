@@ -67,8 +67,10 @@ namespace Osiris.Controllers
         public ActionResult EntryCommonMemo(AcceptanceModels models)
         {
             models.UpdateCommonMemo();
+            models.SetReceptionInfo();
             models.SetDropDownListVendor();
             models.SetDropDownListDistributor();
+            models.Step = "1";
 
             return View("Acceptance1", models);
         }
@@ -148,6 +150,54 @@ namespace Osiris.Controllers
         // POST: STEP1の次へボタン押下時
         public ActionResult NextToStep2(AcceptanceModels models)
         {
+            // バリデーションチェック START *********************************************************
+            // 着払い金額チェック
+            // 着払い必須代理店の取得
+            List<ConstValue> consts = ExtensionMethods.GetConstValue(ConstDef.REQ_COD_COST_DISTRIBUTOR);
+            // 選択代理店のチェック
+            bool ReqCodCostDistributor = false;
+            foreach(ConstValue item in consts)
+            {
+                if (models.DistributorID == item.ConstCd)
+                    ReqCodCostDistributor = true;
+            }
+            // 着払い金額必須代理店の時は着払い金額入力必要
+            if (ReqCodCostDistributor && models.CodCost == 0)
+            {
+                // エラーメッセージに表示する代理店名を取得
+                DSNLibrary dsnLib = new DSNLibrary();
+                StringBuilder stbSql = new StringBuilder();
+
+                stbSql.Append("SELECT ");
+                stbSql.Append("    代理店名 ");
+                stbSql.Append("FROM ");
+                stbSql.Append("    代理店マスタ ");
+                stbSql.Append("WHERE ");
+                stbSql.Append("    ID = '" + models.DistributorID + "' ");
+
+                SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+
+                if (sqlRdr.HasRows)
+                {
+                    sqlRdr.Read();
+                    models.DistributorName = sqlRdr.GetValue<string>("代理店名");
+                }
+
+                ModelState.AddModelError(string.Empty, "代理店が【" + models.DistributorName + "】の時は着払い金額は必須です。");
+
+                sqlRdr.Close();
+                dsnLib.DB_Close();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                models.SetDropDownListVendor();
+                models.SetDropDownListDistributor();
+                models.Step = "1";
+                return View("Acceptance1", models);
+            }
+            // バリデーションチェック END ***********************************************************
+
             models.UpdateStep1();
 
             models.SetReceptionInfo();
@@ -202,7 +252,44 @@ namespace Osiris.Controllers
         // GET: 商品名変更時の帳票非表示付属品の初期値取得
         public ActionResult GetHideReportAcc(string prmProductID)
         {
-            return Json(ConstDef.HIDE_REPORT_ACC_INIT, JsonRequestBehavior.AllowGet);
+            DSNLibrary dsnLib = new DSNLibrary();
+            StringBuilder stbSql = new StringBuilder();
+            ArrayList HideReportAccLists = new ArrayList();
+
+            // 帳票非表示付属品を取得
+            stbSql.Append("SELECT * FROM M_CONST ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("    GROUP_CD = '" + ConstDef.HIDE_REPORT_ACC_INIT_CD + "' ");
+
+            SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+
+            while (sqlRdr.Read())
+            {
+                HideReportAccLists.Add(sqlRdr.GetValue<string>("VALUE"));
+            }
+
+            return Json(HideReportAccLists, JsonRequestBehavior.AllowGet);
+        }
+
+        // GET: 製品型番リスト変更時の保証期間取得
+        public ActionResult GetWarrantyPeriod(string prmModelNumber)
+        {
+            DSNLibrary dsnLib = new DSNLibrary();
+            StringBuilder stbSql = new StringBuilder();
+
+            stbSql.Append("SELECT ");
+            stbSql.Append("    型名マスタ.保証期間 ");
+            stbSql.Append("FROM ");
+            stbSql.Append("    型名マスタ ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("    型名マスタ.型名番号 = '" + prmModelNumber + "' ");
+
+            SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+            sqlRdr.Read();
+
+            int intWarrantyPeriod = sqlRdr.GetValue<int>("保証期間");
+
+            return Json(new { WarrantyPeriod = intWarrantyPeriod }, JsonRequestBehavior.AllowGet);
         }
 
         // POST: STEP2の次へボタン押下時
@@ -212,17 +299,24 @@ namespace Osiris.Controllers
             models.UpdateStep2Acc();
 
             models.SetReceptionInfo();
+            models.SetDropDownListRepairStatus();
             models.Step = "3";
 
             return View("Acceptance3", models);
         }
 
         // POST: STEP1へ戻る
-        public ActionResult BackToStep1(AcceptanceModels models)
+        public ActionResult BackToStep1FromStep2(AcceptanceModels models)
         {
             models.UpdateStep2Call();
             models.UpdateStep2Acc();
 
+            return SearchRcpInfo(models.ReceptionNumber);
+        }
+
+        // POST: STEP1へ戻る
+        public ActionResult BackToStep1FromStep3(AcceptanceModels models)
+        {
             return SearchRcpInfo(models.ReceptionNumber);
         }
     }

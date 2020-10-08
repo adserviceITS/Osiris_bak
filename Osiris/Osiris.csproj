@@ -331,6 +331,7 @@
     <Content Include="Views\Main\Top.cshtml" />
     <Content Include="Views\Acceptance\Acceptance2.cshtml" />
     <Content Include="Views\Acceptance\Acceptance3.cshtml" />
+    <Content Include="Views\Acceptance\_HeaderModal.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Web;
 
 namespace Osiris.Modules
@@ -51,5 +53,41 @@ namespace Osiris.Modules
                 return objIsNotNull;
             }
         }
+
+        // 定数マスタからの単純な値取得
+        public static List<ConstValue> GetConstValue(string GroupCd)
+        {
+            DSNLibrary dsnLib = new DSNLibrary();
+            StringBuilder stbSql = new StringBuilder();
+            List<ConstValue> constList = new List<ConstValue>();
+
+            stbSql.Append("SELECT * FROM M_CONST ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("   GROUP_CD = '" + GroupCd + "' AND ");
+            stbSql.Append("   DEL_FLG = '0' ");
+            stbSql.Append("ORDER BY SORT_ORDER ");
+
+            SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+
+            while (sqlRdr.Read())
+            {
+                constList.Add(new ConstValue
+                {
+                    ConstCd = sqlRdr.GetValue<string>("CONST_CD"),
+                    Value = sqlRdr.GetValue<string>("VALUE"),
+                });
+            }
+
+            sqlRdr.Close();
+            dsnLib.DB_Close();
+
+            return constList;
+        }
+    }
+
+    public class ConstValue
+    {
+        public string ConstCd { get; set; }
+        public string Value { get; set; }
     }
 }

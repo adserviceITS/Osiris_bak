@@ -29,10 +29,12 @@ namespace Osiris.Modules
         //                                         + @"User ID=" + DB_USER_ID + ";"
         //                                         + @"Password=" + DB_PASSWORD;
 
-        // 1画面に表示する行数
-        public const int PAGE_ROW_SIZE = 300;
+        // 定数マスタのグループ設定
+        public const string PAGE_ROW_SIZE_CD = "001";   // 1画面に表示する行数
+        public const string HIDE_REPORT_ACC_INIT_CD = "002";    // 帳票に表示しない付属品の初期設定
+        public const string REQ_COD_COST_DISTRIBUTOR = "003";   // 着払い金額必須代理店
 
-        // 帳票に表示しない付属品
-        public static readonly string[] HIDE_REPORT_ACC_INIT = { "代理店伝票", "販売店伝票", "お客様メモ", "店メモ", "送り状" };
+        // 入荷済みのステータスコード
+        public const string CPL_ARR_REP_STTS_CD = "3100";
     }
 }

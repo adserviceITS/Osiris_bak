@@ -13,7 +13,7 @@
             <p>登録内容を確認して下さい。</p>
         </div>
         <div class="form-row" style="margin-top:20px;">
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <div class="input-group" style="height:38px;">
                     <div class="input-group-prepend">
                         <span class="input-group-text" style="color:white; background-color: #007bff; border-color: #007bff;">種別</span>
@@ -21,7 +21,7 @@
                     <input type="text" class="form-control" id="route" readonly="readonly" style="width:150px; background-color:orange; flex:unset;" value="" />
                 </div>
                 <!-- 代理店情報 ------------------------------------------------------------------------------>
-                <table class="table table-bordered table-sm table-hover table-condensed">
+                <table class="table table-bordered table-sm table-hover table-condensed" style="margin-top:20px; max-width:57.3%">
                     <tr>
                         <td colspan="2" class="bg-orange" style="background-color:#FF6600">代理店情報</td>
                     </tr>
@@ -91,7 +91,7 @@
                     </div>
                 </div>
                 <!-- 返送先情報入力 ------------------------------------------------------------------------------>
-                <table class="table table-bordered table-sm table-hover table-condensed">
+                <table class="table table-bordered table-sm table-hover table-condensed" style="margin-top:20px; max-width:57.3%">
                     <tr>
                         <td colspan="2" class="bg-warning">返送先情報</td>
                     </tr>
@@ -124,16 +124,166 @@
                         <td>@Model.RtnFaxNo</td>
                     </tr>
                 </table>
-            </div>
-            <div class="col-md-1">
+                <!-- 製品情報入力 ------------------------------------------------------------------------------>
+                <div class="form-row" style="margin-top:20px;">
+                    <div class="input-group col-md-7">
+                        <table class="table table-bordered table-sm table-hover table-condensed">
+                            <tr>
+                                <td colspan="2" style="background-color:#CCFFFF;">製品情報</td>
+                            </tr>
+                            <tr>
+                                <td style="width:90px; vertical-align: middle;">シリアル</td>
+                                <td>@Model.SerialNo</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">商品名</td>
+                                <td>@Model.ProductName</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">製品型番</td>
+                                <td>@Model.ModelName</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">購入日</td>
+                                <td>@Model.BuyDate</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">保証期間/日</td>
+                                <td><p id="WarrantyPeriod" style="margin:unset;">@Model.WarrantyPeriod</p></td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: middle;">保証コード</td>
+                                <td><p id="WarrantyName" style="margin:unset;">@Model.WarrantyName</p></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-5" style="margin:unset;">
+                        <img style="max-width:100%;" src="~/Content/img/ProductSample01.jpg" alt="代理店サンプル１" id="DistributorSample01" />
+                        <img style="max-width:100%; margin-top:5px;" src="~/Content/img/ProductSample02.jpg" alt="代理店サンプル２" id="DistributorSample02" />
+                    </div>
+                </div>
+                <!-- 申請内容 ------------------------------------------------------------------------------>
+                <div class="normal-box5-red" style="margin-top:20px;">
+                    <p>申請内容の仕様不明</p>
+                    <p style="padding-bottom:200px; margin-top:20px;">申告内容NO｜申告内容</p>
+                </div>
+                <!-- 付属品情報入力 ------------------------------------------------------------------------------>
+                <div class="form-row" style="margin-top:30px;">
+                    <div class="col-md-6">
+                        <table class="table table-bordered table-sm table-hover table-condensed" id="ShowReportAccTbl">
+                            <thead>
+                                <tr style="background-color:InfoBackground;">
+                                    <td>付属品名</td>
+                                    <td>数量</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.ShowReportAccLists.Count(); i++)
+                                {
+                                    if (Model.ShowReportAccLists[i].ShowReportAccQTY == 0) {
+                                        <tr style="background-color:#FFC7AF;">
+                                            <td><p id="ShowReportAccName" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccName</p></td>
+                                            <td>@Model.ShowReportAccLists[i].ShowReportAccQTY</td>
+                                        </tr>
+                                    } else {
+                                        <tr>
+                                            <td><p id="ShowReportAccName" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccName</p></td>
+                                            <td>@Model.ShowReportAccLists[i].ShowReportAccQTY</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-bordered table-sm table-hover table-condensed" id="HideReportAccTbl">
+                            <thead>
+                                <tr style="background-color:InfoBackground;">
+                                    <td>付属品名（代理店？）</td>
+                                    <td>数量</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.HideReportAccLists.Count(); i++)
+                                {
+                                    if (Model.HideReportAccLists[i].HideReportAccQTY == 0) {
+                                        <tr style="background-color:#FFC7AF;">
+                                            <td><p id="HideReportAccName" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccName</p></td>
+                                            <td>@Model.HideReportAccLists[i].HideReportAccQTY</td>
+                                        </tr>
+                                    } else {
+                                        <tr>
+                                            <td><p id="HideReportAccName" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccName</p></td>
+                                            <td>@Model.HideReportAccLists[i].HideReportAccQTY</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="col-md-6 slide-fixed">
                 <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
-                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
+                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "", @readonly = "readonly" })
             </div>
+        </div>
+        <!-- 操作ボタン ------------------------------------------------------------------------------>
+        <div class="form-inline" style="text-align:center; display: block; margin-top: 30px; font-size: 18px;">
+            <button type="button" class="btn btn-primary btn-lg" style="width: 70%;" formaction="/Acceptance/NextToStep3" id="NextToStep3Btn">登録</button>
+            <button class="btn btn-danger btn-lg" style="width: auto;" formaction="/Acceptance/BackToStep1FromStep3" id="BackToStep1Btn">STEP１に戻る</button>
         </div>
     </main>
 }
+<!-- モーダル ---------------------------------------------------------------------->
+@Html.Partial("_HeaderModal")
+<!-- アラート ------------------>
+<div class="modal fade" tabindex="-1" role="dialog" id="EntryAlertModal" aria-labelledby="label1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="font-size:14px;">
+            <div class="modal-header">
+                <h5 class="modal-title">アラート追加</h5>
+                <button type="button" class="btn close" data-dismiss="modal" aria-label="閉じる">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <form role="form" id="EntryAlertModalForm" action="/Acceptance/EntryAlert" method="POST">
+                <!-- Modal ボディー -->
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="col-md-4">
+                            受付番号
+                        </div>
+                        <div class="col-md-4">
+                            @Model.ReceptionNumber
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top:5px;">
+                        <div class="col-md-4">
+                            修理ステータス
+                        </div>
+                        <div class="col-md-4">
+                            @Html.DropDownListFor(
+                                model => model.RepairStatusNo, // プロパティ
+                                new SelectList(Model.DropDownListRepairStatus, "RepairStatusNo", "RepairStatusName"),
+                                "",
+                                new { @class = "form-control form-control-sm" }
+                            )
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top:15px; margin-bottom:10px;">
+                        @Html.TextAreaFor(model => model.AlertMsg, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "メッセージ" })
+                    </div>
+                </div>
+                <!-- Modal フッター -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="EntryAlertBtn">保存</button>
+                    <button type="button" class="btn btn-outline-dark pull-left" data-dismiss="modal">閉じる</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script type="text/javascript">
     $(function () {
         // 読込み時の初期設定
@@ -143,5 +293,17 @@
         } else {
             $("#route").val("代理店経由")
         }
+
+        // 登録ボタン押下時
+        $('#NextToStep3Btn').click(function () {
+            $('#EntryAlertModal').modal();
+            @{
+                string aMSG = Model.AlertMsg;
+                if (!string.IsNullOrEmpty(aMSG)) {
+                    aMSG = aMSG.Replace("\r\n", "\\r\\n");
+                }
+            }
+            $('#EntryAlertModal').val('@aMSG');
+        });
     });
 </script>
