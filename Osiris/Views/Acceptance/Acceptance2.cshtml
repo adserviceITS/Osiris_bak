@@ -3,7 +3,7 @@
     ViewBag.Title = "受付 Step2";
 }
 <link href="~/Content/Acceptance.css" rel="stylesheet" />
-@using (Html.BeginForm())
+@using (Html.BeginForm(null, null, "", FormMethod.Post, new { id = "EntryForm2" }))
 {
     <header class="sticky-top" style="top:40px; background-color:white; padding-top:10px; padding-bottom: 1px;">
         @Html.Partial("_Header")
@@ -15,10 +15,6 @@
                 <table class="table table-bordered table-sm table-hover table-condensed">
                     <tr>
                         <td colspan="2" style="background-color:#CCFFFF;">製品情報を入力してください。</td>
-                    </tr>
-                    <tr>
-                        <td style="width:90px; vertical-align: middle;">シリアル</td>
-                        <td>@Html.TextBoxFor(model => model.SerialNo, null, new { @class = "form-control", placeholder = "シリアルを入力して下さい", style = "border:unset;" })</td>
                     </tr>
                     <tr>
                         <td style="vertical-align: middle;">商品名</td>
@@ -43,11 +39,15 @@
                         </td>
                     </tr>
                     <tr>
+                        <td style="width:90px; vertical-align: middle;">シリアル</td>
+                        <td>@Html.TextBoxFor(model => model.SerialNo, null, new { @class = "form-control", placeholder = "シリアルを入力して下さい", style = "border:unset;" })</td>
+                    </tr>
+                    <tr>
                         <td style="vertical-align: middle;">購入日</td>
                         <td>@Html.TextBoxFor(model => model.BuyDate, null, new { @class = "form-control", placeholder = "カレンダー選択", style = "max-width: 120px;" })</td>
                     </tr>
                     <tr>
-                        <td style="vertical-align: middle;">保証期間/日</td>
+                        <td style="vertical-align: middle;">保証期間/年</td>
                         <td><p id="WarrantyPeriod" style="margin:unset;">@Model.WarrantyPeriod</p></td>
                     </tr>
                     <tr>
@@ -73,11 +73,22 @@
             </div>
             <div class="col-md-5">
                 <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
-                @Html.TextAreaFor(model => model.CommonMemo, 15, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "" })
+                @Html.TextAreaFor(model => Model.CommonMemo, 15, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "", @readonly = "readonly" })
             </div>
         </div>
         <!-- 付属品情報入力 ------------------------------------------------------------------------------>
-        <div class="form-row" style="margin-top:30px;">
+        <div class="form-row" style="margin-top:20px;">
+            <div class="col-md-6">
+            </div>
+            <div class="col-md-5 form-check-inline">
+                <label for="AccCMemoAddFlg" class="form-check-label col-form-label-sm">付属品内容を共通メモに追記</label>
+                @Html.CheckBoxFor(
+                     model => model.AccCMemoAddFlg,  // プロパティ
+                     new { @class = "form-check-input", style = "margin-left:20px;transform: scale(1.3);" }      // その他の属性
+                 )
+            </div>
+        </div>
+        <div class="form-row">
             <div class="col-md-5">
                 <table class="table table-bordered table-sm table-hover table-condensed" id="ShowReportAccTbl" style="width:450px;">
                     <thead>
@@ -90,12 +101,12 @@
                     <tbody>
                         @for (int i = 0; i < Model.ShowReportAccLists.Count(); i++)
                         {
-                            <tr>
-                                <td><p id="ShowReportAccName" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccName</p></td>
-                                @Html.HiddenFor(model => Model.ShowReportAccLists[i].ShowReportAccName)
-                                <td>@Html.TextBoxFor(model => Model.ShowReportAccLists[i].ShowReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
-                                <td><p id="ShowReportAccIMG" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccIMG</p></td>
-                            </tr>
+                        <tr>
+                            <td><p id="ShowReportAccName" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccName</p></td>
+                            @Html.HiddenFor(model => Model.ShowReportAccLists[i].ShowReportAccName)
+                            <td>@Html.TextBoxFor(model => Model.ShowReportAccLists[i].ShowReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
+                            <td><p id="ShowReportAccIMG" style="margin:unset;">@Model.ShowReportAccLists[i].ShowReportAccIMG</p></td>
+                        </tr>
                         }
                     </tbody>
                 </table>
@@ -114,12 +125,13 @@
                     <tbody>
                         @for (int i = 0; i < Model.HideReportAccLists.Count(); i++)
                         {
-                            <tr>
-                                <td><p id="HideReportAccName" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccName</p></td>
-                                @Html.HiddenFor(model => Model.HideReportAccLists[i].HideReportAccName)
-                                <td>@Html.TextBoxFor(model => Model.HideReportAccLists[i].HideReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
-                                <td><p id="HideReportAccIMG" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccIMG</p></td>
-                            </tr>
+                        <tr>
+                            <td><p id="HideReportAccName" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccName</p></td>
+                            <td>@Html.TextBoxFor(model => Model.HideReportAccLists[i].HideReportAccQTY, new { @class = "inputNum", style = "width:50px" })</td>
+                            <td><p id="HideReportAccIMG" style="margin:unset;">@Model.HideReportAccLists[i].HideReportAccIMG</p></td>
+                            @Html.HiddenFor(model => Model.HideReportAccLists[i].HideReportAccName, new { id = "initHideReportAccName" })
+                            @Html.HiddenFor(model => Model.HideReportAccLists[i].HideReportAccQTY, new { id = "initHideReportAccQTY" })
+                        </tr>
                         }
                     </tbody>
                 </table>
@@ -136,7 +148,7 @@
             <div class="col-md-5">
                 <div class="input-group" style="height:38px;">
                     <div class="input-group-prepend">
-                        <span class="input-group-text" style="color:white; background-color:silver;">カートンロケ</span>
+                        <span class="input-group-text" style="color:white; background-color:green;">カートンロケ</span>
                     </div>
                     @Html.TextBoxFor(model => model.CartonLoc, null, new { @class = "form-control", placeholder = "カートンロケ入力", style = "max-width: 160px;" })
                 </div>
@@ -153,31 +165,38 @@
 @Html.Partial("_HeaderModal")
 
 <script type="text/javascript">
-    $(function () {
+$(function () {
 
-        // 日付選択のカレンダー表示 + 不正日付のチェック
-        $('#BuyDate').datepicker({
-            dateFormat: 'yy/mm/dd',
-            showButtonPanel: true,
-            changeMonth: true,
-            changeYear: true,
-            showOtherMonths: true
-        });
+    // 日付選択のカレンダー表示 + 不正日付のチェック
+    $('#BuyDate').datepicker({
+        dateFormat: 'yy/mm/dd',
+        showButtonPanel: true,
+        changeMonth: true,
+        changeYear: true,
+        showOtherMonths: true
+    });
 
-        // 商品が変更された時
-        $("#ProductID").change(function (e) {
-            e.preventDefault();
+    // 商品が変更された時
+    $("#ProductID").change(function (e) {
+        e.preventDefault();
 
-            swal({
-                title: "商品を変更しますか？",
-                text: "※付属品の内容が初期化されます！",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            })
+        Swal.fire({
+            title: "商品を変更しますか？",
+            text: "※付属品の内容が初期化されます！",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'OK'
+        })
             .then((rst) => {
                 // 商品変更了承時
-                if (rst) {
+                if (rst.value) {
+                    // 保証期間をクリア
+                    $("#WarrantyPeriod").text("");
+                    $("#WarrantyName").text("");
+                    $("#WarrantyCode").val("");
+
                     // データ属性を変更
                     $.data(this, 'current', $(this).val());
 
@@ -225,7 +244,7 @@
                     }).fail(function (xhr, status, error) {
                         // 異常時
                         alert(error);
-                        });
+                    });
 
                     // 帳票非表示付属品内容のセット
                     var param = {
@@ -255,61 +274,56 @@
                     $(this).val($.data(this, 'current'));
                 }
             });
-        });
+    });
 
-        // 製品型番が変更された時、保証期間を変更
-        $("#ModelNumber").change(function (e) {
-            e.preventDefault();
+    // 製品型番が変更された時、保証期間を変更
+    $("#ModelNumber").change(function (e) {
+        e.preventDefault();
 
-            // 製品型番に合致する保証期間を設定
-            var param = {
-                prmModelNumber: $("#ModelNumber").val()
-            }
-            $.ajax({
-                url: '@Url.Action("GetWarrantyPeriod", "Acceptance")',
-                type: "GET",
-                data: param
-            }).done(function (data) {
-                // 正常時
-                $("#WarrantyPeriod").text(data["WarrantyPeriod"]);
-            }).fail(function (xhr, status, error) {
-                // 異常時
-                alert(error);
-            });
-        });
-
-        // 購入日変更時の保証コードの設定
-        $('#BuyDate').change(function () {
-            // 購入日が未入力
-            if (isEmpty($('#BuyDate').val())) {
-                $('#WarrantyName').text('購入日不明');
-                $('#WarrantyCode').val('15');
-                return;
-            }
-
-            var buyDate = new Date($('#BuyDate').val());
-            var buyDate2 = new Date($('#BuyDate').val());
-            var buyDate1ay = buyDate.setFullYear(buyDate.getFullYear() + 1);    // 購入日の1年後
-            var receptionDate = new Date("@Model.ReceptionDate");
-            var warrantyDate = buyDate2.setDate(buyDate2.getDate() + @Model.WarrantyPeriod);
-
-            // 受付日が購入日の1年以内
-            if (receptionDate <= buyDate1ay) {
-                $('#WarrantyName').text('メーカー保証');
-                $('#WarrantyCode').val('12');
-                return;
-            }
-
-            // 受付日が保証期間以内の場合
-            if (receptionDate <= warrantyDate) {
-                $('#WarrantyName').text('メーカー保証');
-                $('#WarrantyCode').val('12');
-                return;
-            } else {
-                $('#WarrantyName').text('保証期間外');
-                $('#WarrantyCode').val('10');
-            }
-
+        // 製品型番に合致する保証期間を設定
+        var param = {
+            prmModelNumber: $("#ModelNumber").val()
+        }
+        $.ajax({
+            url: '@Url.Action("GetWarrantyPeriod", "Acceptance")',
+            type: "GET",
+            data: param
+        }).done(function (data) {
+            // 正常時
+            $("#WarrantyPeriod").text(data["WarrantyPeriod"]);
+            setWarrantyCode();
+        }).fail(function (xhr, status, error) {
+            // 異常時
+            alert(error);
         });
     });
+
+    // 購入日変更時の保証コードの設定
+    $('#BuyDate').change(function () {
+        setWarrantyCode();
+    });
+
+    function setWarrantyCode() {
+        // 購入日が未入力
+        if (isEmpty($('#BuyDate').val())) {
+            $('#WarrantyName').text('購入日不明');
+            $('#WarrantyCode').val('15');
+            return;
+        }
+
+        var buyDate = new Date($('#BuyDate').val());
+        var warrantyDate = buyDate.setFullYear(buyDate.getFullYear() + Number($("#WarrantyPeriod").text()));    // 購入日からの保証期間終了日
+        var receptionDate = new Date("@Model.ReceptionDate");
+
+        // 受付日が保証期間内
+        if (receptionDate <= warrantyDate) {
+            $('#WarrantyName').text('メーカー保証');
+            $('#WarrantyCode').val('12');
+        } else {
+            $('#WarrantyName').text('保証期間外');
+            $('#WarrantyCode').val('10');
+        }
+    };
+});
+
 </script>

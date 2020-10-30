@@ -5,7 +5,7 @@
 <!-- 住所自動入力スクリプト -->
 <script src="https://ajaxzip3.github.io/ajaxzip3.js" charset="UTF-8"></script>
 <link href="~/Content/Acceptance.css" rel="stylesheet" />
-@using (Html.BeginForm("Entry", "Acceptance", "", FormMethod.Post, new { id = "Entry1Form" }))
+@using (Html.BeginForm(null, null, "", FormMethod.Post, new { id = "EntryForm1" }))
 {
     <header class="sticky-top" style="top:40px; background-color:white; padding-top:10px; padding-bottom: 1px;">
         @Html.Partial("_Header")
@@ -14,10 +14,10 @@
         @Html.ValidationSummary(true, "", new { @class = "alert alert-danger", style = "font-size:16px;" })
         <!-- 経由トグル ---------------------------------------------------------------------------------->
         <div class="btn-group btn-group-toggle" data-toggle="buttons">
-            <label class="btn btn-secondary active" style="font-size:16px;">
+            <label class="btn btn-silver active" style="font-size:16px;">
                 <input class="form-check-input" type="radio" name="RouteCd" id="R001"> 個人経由
             </label>
-            <label class="btn btn-secondary" style="font-size:16px;">
+            <label class="btn btn-silver" style="font-size:16px;">
                 <input class="form-check-input" type="radio" name="RouteCd" id="R002"> 代理店経由
             </label>
         </div>
@@ -197,7 +197,7 @@
             <div class="col-md-1"></div>
             <div class="col-md-7">
                 <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
-                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "", @readonly = "readonly" })
+                <textarea class="form-control form-control-sm  d-flex align-items-center" cols="2000" id="CommonMemo" name="CommonMemo" placeholder="" readonly="readonly" rows="15" style="max-width:100%;">@Model.CommonMemo</textarea>
             </div>
         </div>
         <!-- ボタン類 ------------------------------------------------------------------------------>
@@ -211,169 +211,196 @@
 @Html.Partial("_HeaderModal")
 
 <script type="text/javascript">
-    $(function () {
-        // 読込み時の初期設定
-        // 経由
-        if (isEmpty($("#VendorID").val())) {
-            $("#R001").prop("checked", true);
-            setPerRoute();
-        } else {
-            $("#R002").prop("checked", true);
-            setDistRoute();
+$(function () {
+
+    // 読込み時の初期設定
+    // 経由
+    if (isEmpty($("#VendorID").val())) {
+        $("#R001").prop("checked", true);
+        setPerRoute();
+    } else {
+        $("#R002").prop("checked", true);
+        setDistRoute();
+    }
+    // 返送先変更
+    SetRtnChgYN();
+
+
+    // 新規登録時（処理が長くなりそうなので処理状況を表示）
+    //var NewEntryFlg = "@ViewBag.NewEntryFlg";
+    //if (NewEntryFlg == "true") {
+    //    // 処理状況モーダル表示
+    //    $('#ProgressModal').modal();
+
+    //    // 採番処理実行
+    //    $("#ProgressMsg").text("新規受付番号を発行しています。")
+    //    $.ajax({
+    //        url: '@Url.Action("NewEntry_2", "Acceptance")',
+    //        type: "GET"
+    //    })
+    //        .done(function (data, status, xhr) {
+    //            // 正常時
+    //            var strReceptionNumber = data["ReceptionNumber"];
+    //            $("#SearchReceptionNumber").val(strReceptionNumber);
+    //            $("#ProgressMsg").text("新規受付番号を発行完了しました。")
+    //            $("#pgss").css({ 'width': '70%' });
+
+    //            // 初期セット処理実行
+    //            $("#ProgressMsg").text("初期データをセットします。")
+    //            $("#SearchReceptionForm").submit();
+    //            $("#pgss").css({ 'width': '70%' });
+
+    //            var param = {
+    //                SearchReceptionNumber: strReceptionNumber
+    //            }
+    //            $.ajax({
+    //                url: '@Url.Action("SearchRcpInfo", "Acceptance")',
+    //                type: "POST",
+    //                data: param
+    //            })
+    //                .done(function (data, status, xhr) {
+    //                    // 正常時
+    //                    $("#pgss").css({ 'width': '100%' });
+    //                    $('#ProgressModal').modal('hide');
+    //                }).fail(function (xhr, status, error) {
+    //                    // 異常時
+    //                    $('#ProgressModal').modal('hide');
+    //                    swal("システムエラー", error, "error");
+    //                });
+    //        }).fail(function (xhr, status, error) {
+    //            // 異常時
+    //            $('#ProgressModal').modal('hide');
+    //            swal("システムエラー", error, "error");
+    //        });
+    //}
+
+    // F5が押された時
+    //$(document).keydown(function (event) {
+    //    // キーコードを取得する
+    //    var keyCode = event.keyCode;
+    //    // F5 の場合はfalse
+    //    if (keyCode == 116) {
+    //        swal("エラー", "F5キーは無効です！", "error")
+    //        return false;
+    //    }
+    //});
+
+    // 個人経由選択時、不要項目グレーアウト
+    function setPerRoute() {
+        $("#VendorID").prop("disabled", true);
+        $("#DistributorID").prop("disabled", true);
+        $("#CodCost").prop("disabled", true);
+        $("#Shop").prop("disabled", true);
+        $("#InvoiceNo").prop("disabled", true);
+    };
+    // 代理店経由選択時、グレーアウト解除
+    function setDistRoute() {
+        $("#VendorID").prop("disabled", false);
+        $("#DistributorID").prop("disabled", false);
+        $("#CodCost").prop("disabled", false);
+        $("#Shop").prop("disabled", false);
+        $("#InvoiceNo").prop("disabled", false);
+    };
+
+    $("#R001").click(function () {
+        setPerRoute();
+    });
+    $("#R002").click(function () {
+        setDistRoute();
+    });
+
+    // 日付選択のカレンダー表示 + 不正日付のチェック
+    $('#ArrivalDate').datepicker({
+        dateFormat: 'yy/mm/dd',
+        showButtonPanel: true,
+        changeMonth: true,
+        changeYear: true,
+        showOtherMonths: true
+    });
+
+    // （入荷日）不正日付チェック
+    $("#ArrivalDate").change(function () {
+        if ($(this).val() != '') {
+            var inputDate = new Date($(this).val());
+            if (isNaN(inputDate.getTime()) || $(this).val().length != 10) {
+                alert("不正な日付です！");
+                $(this).addClass("is-invalid");
+                $(this).select();
+                return false;
+            }
+            $(this).removeClass("is-invalid");
+            return true;
         }
-        // 返送先変更
-        SetRtnChgYN();
+    });
 
-
-        // 新規登録時（処理が長くなりそうなので処理状況を表示）
-        @*var NewEntryFlg = "@ViewBag.NewEntryFlg";
-        if (NewEntryFlg == "true") {
-            // 処理状況モーダル表示
-            $('#ProgressModal').modal();
-
-            // 採番処理実行
-            $("#ProgressMsg").text("新規受付番号を発行しています。")
-            $.ajax({
-                url: '@Url.Action("NewEntry_2", "Acceptance")',
-                type: "GET"
-            })
-                .done(function (data, status, xhr) {
-                    // 正常時
-                    var strReceptionNumber = data["ReceptionNumber"];
-                    $("#SearchReceptionNumber").val(strReceptionNumber);
-                    $("#ProgressMsg").text("新規受付番号を発行完了しました。")
-                    $("#pgss").css({ 'width': '70%' });
-
-                    // 初期セット処理実行
-                    $("#ProgressMsg").text("初期データをセットします。")
-                    $("#SearchReceptionForm").submit();
-                    $("#pgss").css({ 'width': '70%' });
-
-                    var param = {
-                        SearchReceptionNumber: strReceptionNumber
-                    }
-                    $.ajax({
-                        url: '@Url.Action("SearchRcpInfo", "Acceptance")',
-                        type: "POST",
-                        data: param
-                    })
-                        .done(function (data, status, xhr) {
-                            // 正常時
-                            $("#pgss").css({ 'width': '100%' });
-                            $('#ProgressModal').modal('hide');
-                        }).fail(function (xhr, status, error) {
-                            // 異常時
-                            $('#ProgressModal').modal('hide');
-                            swal("システムエラー", error, "error");
-                        });
-                }).fail(function (xhr, status, error) {
-                    // 異常時
-                    $('#ProgressModal').modal('hide');
-                    swal("システムエラー", error, "error");
-                });
-        }*@
-
-        // F5が押された時
-        //$(document).keydown(function (event) {
-        //    // キーコードを取得する
-        //    var keyCode = event.keyCode;
-        //    // F5 の場合はfalse
-        //    if (keyCode == 116) {
-        //        swal("エラー", "F5キーは無効です！", "error")
-        //        return false;
-        //    }
-        //});
-
-        // 個人経由選択時、不要項目グレーアウト
-        function setPerRoute() {
-            $("#VendorID").prop("disabled", true);
-            $("#DistributorID").prop("disabled", true);
-            $("#CodCost").prop("disabled", true);
-            $("#Shop").prop("disabled", true);
-            $("#InvoiceNo").prop("disabled", true);
-        };
-        // 代理店経由選択時、グレーアウト解除
-        function setDistRoute() {
-            $("#VendorID").prop("disabled", false);
-            $("#DistributorID").prop("disabled", false);
-            $("#CodCost").prop("disabled", false);
-            $("#Shop").prop("disabled", false);
-            $("#InvoiceNo").prop("disabled", false);
-        };
-
-        $("#R001").click(function () {
-            setPerRoute();
-        });
-        $("#R002").click(function () {
-            setDistRoute();
-        });
-
-        // 日付選択のカレンダー表示 + 不正日付のチェック
-        $('#ArrivalDate').datepicker({
-            dateFormat: 'yy/mm/dd',
-            showButtonPanel: true,
-            changeMonth: true,
-            changeYear: true,
-            showOtherMonths: true
-        });
-
-        // （入荷日）不正日付チェック
-        $("#ArrivalDate").change(function () {
-            if ($(this).val() != '') {
-                var inputDate = new Date($(this).val());
-                if (isNaN(inputDate.getTime()) || $(this).val().length != 10) {
-                    alert("不正な日付です！");
-                    $(this).addClass("is-invalid");
-                    $(this).select();
-                    return false;
-                }
-                $(this).removeClass("is-invalid");
-                return true;
-            }
-        });
-
-        // 今日ボタンクリック処理
-        $("#ToDay").on("click", function () {
+    // 今日ボタンクリック処理
+    $("#ToDay").on("click", function () {
+        var dt = new Date();
+        var y = dt.getFullYear();
+        var m = ("00" + (dt.getMonth() + 1)).slice(-2);
+        var d = ("00" + dt.getDate()).slice(-2);
+        $("#ArrivalDate").val(y + "/" + m + "/" + d);
+    });
+    // -1日ボタンクリック処理
+    $("#MinusDay").on("click", function () {
+        var strArrivalDate = $("#ArrivalDate").val();
+        // 空だったら昨日をセット
+        if (isEmpty(strArrivalDate)) {
             var dt = new Date();
-            var y = dt.getFullYear();
-            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
-            var d = ("00" + dt.getDate()).slice(-2);
-            $("#ArrivalDate").val(y + "/" + m + "/" + d);
-        });
-        // -1日ボタンクリック処理
-        $("#MinusDay").on("click", function () {
-            var strArrivalDate = $("#ArrivalDate").val();
-            // 空だったら昨日をセット
-            if (isEmpty(strArrivalDate)) {
-                var dt = new Date();
-            } else {
-                var dt = new Date(strArrivalDate);
-            }
-            dt.setDate(dt.getDate() - 1);
-            var y = dt.getFullYear();
-            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
-            var d = ("00" + dt.getDate()).slice(-2);
-            $("#ArrivalDate").val(y + "/" + m + "/" + d);
-        });
-        // +1日ボタンクリック処理
-        $("#PlusDay").on("click", function () {
-            var strArrivalDate = $("#ArrivalDate").val();
-            // 空だったら明日をセット
-            if (isEmpty(strArrivalDate)) {
-                var dt = new Date();
-            } else {
-                var dt = new Date(strArrivalDate);
-            }
-            dt.setDate(dt.getDate() + 1);
-            var y = dt.getFullYear();
-            var m = ("00" + (dt.getMonth() + 1)).slice(-2);
-            var d = ("00" + dt.getDate()).slice(-2);
-            $("#ArrivalDate").val(y + "/" + m + "/" + d);
-        });
+        } else {
+            var dt = new Date(strArrivalDate);
+        }
+        dt.setDate(dt.getDate() - 1);
+        var y = dt.getFullYear();
+        var m = ("00" + (dt.getMonth() + 1)).slice(-2);
+        var d = ("00" + dt.getDate()).slice(-2);
+        $("#ArrivalDate").val(y + "/" + m + "/" + d);
+    });
+    // +1日ボタンクリック処理
+    $("#PlusDay").on("click", function () {
+        var strArrivalDate = $("#ArrivalDate").val();
+        // 空だったら明日をセット
+        if (isEmpty(strArrivalDate)) {
+            var dt = new Date();
+        } else {
+            var dt = new Date(strArrivalDate);
+        }
+        dt.setDate(dt.getDate() + 1);
+        var y = dt.getFullYear();
+        var m = ("00" + (dt.getMonth() + 1)).slice(-2);
+        var d = ("00" + dt.getDate()).slice(-2);
+        $("#ArrivalDate").val(y + "/" + m + "/" + d);
+    });
 
-        // 代理店選択時に入荷元／返送先情報を自動入力
-        $("#DistributorID").change(function () {
+    // 販路変更時、紐付く代理店のみ表示する。
+    $("#VendorID").change(function (e) {
+        e.preventDefault();
 
+        var param = {
+            prmVendorID: $("#VendorID").val()
+        }
+
+        $.ajax({
+            url: '@Url.Action("GetDistributorDropDownList", "Acceptance")',
+            type: "POST",
+            data: param
+        }).done(function (response) {
+            // 正常時
+            $("#DistributorID").empty();
+            $("#DistributorID").append($('<option></option>'));
+            $.each(response, function (index, item) {
+                $("#DistributorID").append($('<option></option>').text(item.DistributorName).val(item.DistributorID));
+            });
+        }).fail(function (xhr, status, error) {
+            // 異常時
+            alert(error);
+        });
+    });
+
+    // 代理店選択時に入荷元／返送先情報を自動入力
+    $("#DistributorID").change(function () {
+
+        if (!isEmpty($("#DistributorID").val())) {
             var param = {
                 prmDistributorID: $("#DistributorID").val()
             }
@@ -402,45 +429,47 @@
                 // 異常時
                 alert(error);
             });
-        });
-
-        // 住所取得ボタン押下時に住所情報を自動入力
-        $("#getArrAddressBtn").on("click", function () {
-            AjaxZip3.zip2addr('ArrPostalCode', '', 'ArrAddress1', 'ArrAddress1');
-            $("#ArrAddress2").val("");
-        });
-
-        // 返送先有無を選択時の処理
-        function SetRtnChgYN() {
-            if ($('input:radio[name="ReturnFlg"]:checked').val() == '0') {
-                $("#RtnCustomerName").prop("disabled", true);
-                $("#RtnPostalCode").prop("disabled", true);
-                $("#RtnAddress1").prop("disabled", true);
-                $("#RtnAddress2").prop("disabled", true);
-                $("#RtnCorporateName").prop("disabled", true);
-                $("#RtnTelNo1").prop("disabled", true);
-                $("#RtnFaxNo").prop("disabled", true);
-                $("#getRtnAddressBtn").prop("disabled", true);
-            } else {
-                $("#RtnCustomerName").prop("disabled", false);
-                $("#RtnPostalCode").prop("disabled", false);
-                $("#RtnAddress1").prop("disabled", false);
-                $("#RtnAddress2").prop("disabled", false);
-                $("#RtnCorporateName").prop("disabled", false);
-                $("#RtnTelNo1").prop("disabled", false);
-                $("#RtnFaxNo").prop("disabled", false);
-                $("#getRtnAddressBtn").prop("disabled", false);
-            }
-        };
-
-        $('input:radio[name="ReturnFlg"]').change(function() {
-            SetRtnChgYN();
-        });
-
-        // 住所取得ボタン押下時に住所情報を自動入力
-        $("#getRtnAddressBtn").on("click", function () {
-            AjaxZip3.zip2addr('RtnPostalCode', '', 'RtnAddress1', 'RtnAddress1');
-            $("#RtnAddress2").val("");
-        });
+        }
     });
+
+    // 住所取得ボタン押下時に住所情報を自動入力
+    $("#getArrAddressBtn").on("click", function () {
+        AjaxZip3.zip2addr('ArrPostalCode', '', 'ArrAddress1', 'ArrAddress1');
+        $("#ArrAddress2").val("");
+    });
+
+    // 返送先有無を選択時の処理
+    function SetRtnChgYN() {
+        if ($('input:radio[name="ReturnFlg"]:checked').val() == '0') {
+            $("#RtnCustomerName").prop("disabled", true);
+            $("#RtnPostalCode").prop("disabled", true);
+            $("#RtnAddress1").prop("disabled", true);
+            $("#RtnAddress2").prop("disabled", true);
+            $("#RtnCorporateName").prop("disabled", true);
+            $("#RtnTelNo1").prop("disabled", true);
+            $("#RtnFaxNo").prop("disabled", true);
+            $("#getRtnAddressBtn").prop("disabled", true);
+        } else {
+            $("#RtnCustomerName").prop("disabled", false);
+            $("#RtnPostalCode").prop("disabled", false);
+            $("#RtnAddress1").prop("disabled", false);
+            $("#RtnAddress2").prop("disabled", false);
+            $("#RtnCorporateName").prop("disabled", false);
+            $("#RtnTelNo1").prop("disabled", false);
+            $("#RtnFaxNo").prop("disabled", false);
+            $("#getRtnAddressBtn").prop("disabled", false);
+        }
+    };
+
+    $('input:radio[name="ReturnFlg"]').change(function () {
+        SetRtnChgYN();
+    });
+
+    // 住所取得ボタン押下時に住所情報を自動入力
+    $("#getRtnAddressBtn").on("click", function () {
+        AjaxZip3.zip2addr('RtnPostalCode', '', 'RtnAddress1', 'RtnAddress1');
+        $("#RtnAddress2").val("");
+    });
+});
+
 </script>

@@ -21,3 +21,13 @@ function isEmpty(ChkVal) {
         return true;
     }
 }
+
+// フィールドを無効に設定
+function disabledForm(form) {
+    $(form)
+        .find("input, select, textarea, :button, :submit, :reset, :hidden")
+        .prop('disabled', true)
+        ;
+
+    $(form).find("label").addClass("disabled");
+}

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -17,6 +18,9 @@ namespace Osiris.Models
         public IEnumerable<CombProduct> DropDownListProduct { get; set; }
         public IEnumerable<CombModel> DropDownListModel { get; set; }
         public IEnumerable<CombRepairStatus> DropDownListRepairStatus { get; set; }
+
+        public string PhotoStudioDirPath { get; set; }     // 写真館ディレクトリ
+        public bool ExistPhotoStudioDir { get; set; }   // 写真館ディレクトリが存在しているか
 
         public string ReceptionNumber { get; set; }     // 受付番号
         public string Status { get; set; }              // ステータス
@@ -67,6 +71,8 @@ namespace Osiris.Models
         public string CartonLoc { get; set; }           // カートンロケ
         public string RepairStatusNo { get; set; }      // 修理ステータス番号
         public string AlertMsg { get; set; }            // アラートメッセージ
+        public bool EditPermitFlg { get; set; }         // 編集可能フラグ
+        public bool AccCMemoAddFlg { get; set;}         // 付属品（帳票に表示しない）内容を共通メモに追加するかフラグ
 
         // コンストラクタ
         public AcceptanceModels()
@@ -87,11 +93,11 @@ namespace Osiris.Models
             DropDownListVendor = ddList.GetDropDownListVendor();
         }
 
-        public void SetDropDownListDistributor()
+        public void SetDropDownListDistributor(string strVendorID)
         {
             // 代理店ドロップダウンリストを取得
             DropDownList ddList = new DropDownList();
-            DropDownListDistributor = ddList.GetDropDownListDistributor();
+            DropDownListDistributor = ddList.GetDropDownListDistributor(strVendorID);
         }
 
         public void SetDropDownListProduct()
@@ -194,8 +200,32 @@ namespace Osiris.Models
             stbSql.Append(") ");
 
             dsnLib.ExecSQLUpdate(stbSql.ToString());
-
             stbSql.Clear();
+
+            //stbSql.Append("INSERT ");
+            //stbSql.Append("INTO コール仮受付 ");
+            //stbSql.Append("( ");
+            //stbSql.Append("    受付番号, ");
+            //stbSql.Append("    修理受付番号, ");
+            //stbSql.Append("    ステータス, ");
+            //stbSql.Append("    修理ステータス, ");
+            //stbSql.Append("    ユーザー, ");
+            //stbSql.Append("    修理明細, ");
+            //stbSql.Append("    受付日 ");
+            //stbSql.Append(") ");
+            //stbSql.Append("VALUES ");
+            //stbSql.Append("( ");
+            //stbSql.Append("    '" + ReceptionNumber + "', ");
+            //stbSql.Append("    '" + ReceptionNumber + "', ");
+            //stbSql.Append("    '9996', ");
+            //stbSql.Append("    '1000', ");
+            //stbSql.Append("    '" + userName + "', ");
+            //stbSql.Append("    '" + initMsg + "', ");
+            //stbSql.Append("    GETDATE() ");
+            //stbSql.Append(") ");
+
+            //dsnLib.ExecSQLUpdate(stbSql.ToString());
+            //stbSql.Clear();
             dsnLib.DB_Close();
 
         }
@@ -207,17 +237,18 @@ namespace Osiris.Models
 
             stbSql.Append("SELECT ");
             stbSql.Append("    コール受付.*, ");
-            stbSql.Append("    ステータスマスタ.ステータス名, ");
+            stbSql.Append("    修理ステータスマスタ.ステータス名, ");
             stbSql.Append("    商品名マスタ.ID AS 商品ID, ");
             stbSql.Append("    型名マスタ.型名番号 AS 製品型番, ");
             stbSql.Append("    型名マスタ.保証期間 AS 保証期間, ");
             stbSql.Append("    販売店マスタ.ID AS 販路ID, ");
             stbSql.Append("    代理店マスタ.ID AS 代理店ID, ");
-            stbSql.Append("    保証コードマスタ.保証コード名 AS 保証コード名 ");
-            //stbSql.Append("    ARRCPT_アラートマスタ.メッセージ ");
+            stbSql.Append("    保証コードマスタ.保証コード名 AS 保証コード名, ");
+            stbSql.Append("    ARRCPT_アラートマスタ.メッセージ, ");
+            stbSql.Append("    ユーザー.ログイン名 AS ログイン名 ");
             stbSql.Append("FROM ");
-            stbSql.Append("    コール受付 LEFT JOIN ステータスマスタ ON ");
-            stbSql.Append("    コール受付.ステータス = ステータスマスタ.ステータス番号 ");
+            stbSql.Append("    コール受付 LEFT JOIN 修理ステータスマスタ ON ");
+            stbSql.Append("    コール受付.修理ステータス = 修理ステータスマスタ.ステータス番号 ");
             stbSql.Append("    LEFT JOIN 商品名マスタ ON ");
             stbSql.Append("    コール受付.商品名 = 商品名マスタ.商品名 ");
             stbSql.Append("    LEFT JOIN 型名マスタ ON ");
@@ -229,11 +260,14 @@ namespace Osiris.Models
             stbSql.Append("    コール受付.代理店名 = 代理店マスタ.代理店名 ");
             stbSql.Append("    LEFT JOIN 保証コードマスタ ON ");
             stbSql.Append("    コール受付.保証コード = 保証コードマスタ.保証コード ");
-            //stbSql.Append("    LEFT JOIN ");
-            //stbSql.Append("       (SELECT * FROM アラートマスタ ");
-            //stbSql.Append("        WHERE 修理ステータス = '" + ConstDef.CPL_ARR_REP_STTS_CD + "' ");
-            //stbSql.Append("       ) ARRCPT_アラートマスタ ON ");
-            //stbSql.Append("    コール受付.受付番号 = ARRCPT_アラートマスタ.受付番号 ");
+            stbSql.Append("    LEFT JOIN ");
+            stbSql.Append("       (SELECT * FROM アラートマスタ ");
+            stbSql.Append("        WHERE 修理ステータス = '" + ConstDef.CPL_ARR_REP_STTS_CD + "' ");
+            stbSql.Append("          AND 削除フラグ = '0' ");
+            stbSql.Append("       ) ARRCPT_アラートマスタ ON ");
+            stbSql.Append("    コール受付.受付番号 = ARRCPT_アラートマスタ.受付番号 ");
+            stbSql.Append("    LEFT JOIN ユーザー ON ");
+            stbSql.Append("    コール受付.ユーザー = ユーザー.ユーザー ");
             stbSql.Append("WHERE ");
             stbSql.Append("    コール受付.受付番号 = '" + ReceptionNumber + "' ");
 
@@ -304,34 +338,62 @@ namespace Osiris.Models
             RtnCorporateName = sqlRdr.GetValue<string>("会社名R");                               // 返送先法人名
             RtnTelNo1 = sqlRdr.GetValue<string>("自宅電話番号");                                 // 返送先電話番号１
             RtnFaxNo = sqlRdr.GetValue<string>("会社電話番号");                                  // 返送先FAX番号
-            WarrantyPeriod = sqlRdr.GetValue<int>("保証期間");                               // 保証コード
+            WarrantyPeriod = sqlRdr.GetValue<int>("保証期間");                               // 保証期間
             WarrantyCode = sqlRdr.GetValue<string>("保証コード");                               // 保証コード
             WarrantyName = sqlRdr.GetValue<string>("保証コード名");                               // 保証名
             PointOutProblem = sqlRdr.GetValue<string>("指摘症状");                               // 指摘症状
             CartonLoc = sqlRdr.GetValue<string>("カートンロケ");                               // カートンロケ
-            //AlertMsg = sqlRdr.GetValue<string>("メッセージ");                                    // アラートメッセージ
-            AlertMsg = "";
+            AlertMsg = sqlRdr.GetValue<string>("メッセージ");                                    // アラートメッセージ
+
+            // 編集可能フラグ設定 **************************************************************************
+            UserInfo userInfo = (UserInfo)HttpContext.Current.Session["userInfo"];
+            string id = userInfo.ID;
+            string userName = userInfo.UserName;
+
+            // 管理者or本人のみ修正可能
+            // 管理者のユーザーIDを取得
+            List<ConstValue> constList = ExtensionMethods.GetConstValue(ConstDef.ADMIN_USER_ID);
+
+            // 値は1件
+            string adminUserID = "";
+            foreach (ConstValue item in constList)
+            {
+                adminUserID = item.Value;
+            }
+
+            if (id == adminUserID) {
+                // 管理者は編集可能
+                EditPermitFlg = true;
+            } else if (id == sqlRdr.GetValue<string>("ログイン名")) {
+                // 本人も編集可能
+                EditPermitFlg = true;
+            } else {
+                // 他は編集NG
+                EditPermitFlg = false;
+            }
+            // ******************************************************************************************************
 
             sqlRdr.Close();
             stbSql.Clear();
             dsnLib.DB_Close();
         }
 
-        public void UpdateCommonMemo()
+        public void SetPhotoStudioInfo()
         {
-            DSNLibrary dsnLib = new DSNLibrary();
-            StringBuilder stbSql = new StringBuilder();
+            // 写真館ディレクトリの取得
+            List<ConstValue> constList = ExtensionMethods.GetConstValue(ConstDef.PHOTO_STUDIO_DIR_PATH);
 
-            stbSql.Append("UPDATE コール受付 ");
-            stbSql.Append("SET ");
-            stbSql.Append("    コール受付.共通メモ = '" + CommonMemo + "' ");
-            stbSql.Append("WHERE ");
-            stbSql.Append("    コール受付.受付番号 = '" + ReceptionNumber + "' ");
+            // 値は1件
+            foreach (ConstValue item in constList)
+            {
+                PhotoStudioDirPath = item.Value;
+            }
 
-            dsnLib.ExecSQLUpdate(stbSql.ToString());
+            // フォルダの存在チェック
+            ExistPhotoStudioDir = Directory.Exists(PhotoStudioDirPath + "\\" + ReceptionNumber.Substring(1, 4) + "\\" + ReceptionNumber);
 
-            dsnLib.DB_Close();
         }
+
 
         public void UpdateStep1()
         {
@@ -431,6 +493,8 @@ namespace Osiris.Models
 
             SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
 
+            ShowReportAccLists.Clear();
+
             while (sqlRdr.Read())
             {
                 ShowReportAccLists.Add(new ShowReportAccList
@@ -457,6 +521,8 @@ namespace Osiris.Models
             stbSql.Append("    RECEPTION_NUMBER = '" + ReceptionNumber + "' ");
 
             SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+
+            HideReportAccLists.Clear();
 
             if (sqlRdr.HasRows)
             {
@@ -538,14 +604,16 @@ namespace Osiris.Models
             string strAccidentFlg = AccidentFlg ? "1" : "0";
             string strReRepairFlg = ReRepairFlg ? "1" : "0";
 
-            // 共通メモに帳票非表示付属品を追記
+            // 追記フラグがオンだったら共通メモに帳票非表示付属品を追記
             string strCommonMemo = CommonMemo.SingleEscape();
-            for (int i = 0; i < HideReportAccLists.Count; i++)
-            {
-                if (HideReportAccLists[i].HideReportAccQTY != 0) {
-                    strCommonMemo = strCommonMemo + "\r\n" +
-                                    HideReportAccLists[i].HideReportAccName + "　" +
-                                    "数量：" + HideReportAccLists[i].HideReportAccQTY;
+            if (AccCMemoAddFlg) {
+                for (int i = 0; i < HideReportAccLists.Count; i++)
+                {
+                    if (HideReportAccLists[i].HideReportAccQTY != 0) {
+                        strCommonMemo = strCommonMemo + "\r\n" +
+                                        HideReportAccLists[i].HideReportAccName + "　" +
+                                        "数量：" + HideReportAccLists[i].HideReportAccQTY;
+                    }
                 }
             }
 
@@ -639,6 +707,185 @@ namespace Osiris.Models
                 dsnLib.ExecSQLUpdate(stbSql.ToString());
                 stbSql.Clear();
             }
+            dsnLib.DB_Close();
+        }
+
+        public void Complete()
+        {
+            DSNLibrary dsnLib = new DSNLibrary();
+            StringBuilder stbSql = new StringBuilder();
+
+            stbSql.Append("UPDATE コール受付 ");
+            stbSql.Append("SET ");
+            stbSql.Append("    コール受付.修理ステータス = '3100' ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("    コール受付.受付番号 = '" + ReceptionNumber + "' ");
+
+            //stbSql.Append("UPDATE コール受付 ");
+            //stbSql.Append("SET ");
+            //stbSql.Append("    コール受付.受付番号 = コール受付.受付番号, ");
+            //stbSql.Append("    コール受付.ステータス = コール受付.ステータス, ");
+            //stbSql.Append("    コール受付.顧客名 = コール受付.顧客名, ");
+            //stbSql.Append("    コール受付.顧客カナ名 = コール受付.顧客カナ名, ");
+            //stbSql.Append("    コール受付.年齢 = コール受付.年齢, ");
+            //stbSql.Append("    コール受付.性別 = コール受付.性別, ");
+            //stbSql.Append("    コール受付.TEL1 = コール受付.TEL1, ");
+            //stbSql.Append("    コール受付.TEL2 = コール受付.TEL2, ");
+            //stbSql.Append("    コール受付.TEL3 = コール受付.TEL3, ");
+            //stbSql.Append("    コール受付.メアド1 = コール受付.メアド1, ");
+            //stbSql.Append("    コール受付.メアド2 = コール受付.メアド2, ");
+            //stbSql.Append("    コール受付.郵便番号 = コール受付.郵便番号, ");
+            //stbSql.Append("    コール受付.住所1 = コール受付.住所1, ");
+            //stbSql.Append("    コール受付.住所2 = コール受付.住所2, ");
+            //stbSql.Append("    コール受付.会社名 = コール受付.会社名, ");
+            //stbSql.Append("    コール受付.送付先郵便番号 = コール受付.送付先郵便番号, ");
+            //stbSql.Append("    コール受付.送付先住所1 = コール受付.送付先住所1, ");
+            //stbSql.Append("    コール受付.送付先住所2 = コール受付.送付先住所2, ");
+            //stbSql.Append("    コール受付.モデル番号 = コール受付.モデル番号, ");
+            //stbSql.Append("    コール受付.商品名 = コール受付.商品名, ");
+            //stbSql.Append("    コール受付.シリアル・ロットNo = コール受付.シリアル・ロットNo, ");
+            //stbSql.Append("    コール受付.購入日 = コール受付.購入日, ");
+            //stbSql.Append("    コール受付.購入店 = コール受付.購入店, ");
+            //stbSql.Append("    コール受付.共通メモ = コール受付.共通メモ, ");
+            //stbSql.Append("    コール受付.返電要 = コール受付.返電要, ");
+            //stbSql.Append("    コール受付.返電予定日 = コール受付.返電予定日, ");
+            //stbSql.Append("    コール受付.返電予定 = コール受付.返電予定, ");
+            //stbSql.Append("    コール受付.エスカレーション = コール受付.エスカレーション, ");
+            //stbSql.Append("    コール受付.重要度 = コール受付.重要度, ");
+            //stbSql.Append("    コール受付.問合せ種別1 = コール受付.問合せ種別1, ");
+            //stbSql.Append("    コール受付.問合せ種別2 = コール受付.問合せ種別2, ");
+            //stbSql.Append("    コール受付.ユーザー = コール受付.ユーザー, ");
+            //stbSql.Append("    コール受付.問合せ方法 = コール受付.問合せ方法, ");
+            //stbSql.Append("    コール受付.回答方法 = コール受付.回答方法, ");
+            //stbSql.Append("    コール受付.削除フラグ = コール受付.削除フラグ, ");
+            //stbSql.Append("    コール受付.修理受付番号 = コール受付.修理受付番号, ");
+            //stbSql.Append("    コール受付.修理ステータス = コール受付.修理ステータス, ");
+            //stbSql.Append("    コール受付.受付日 = コール受付.受付日, ");
+            //stbSql.Append("    コール受付.修理開始日 = コール受付.修理開始日, ");
+            //stbSql.Append("    コール受付.修理完了日 = コール受付.修理完了日, ");
+            //stbSql.Append("    コール受付.建物R = コール受付.建物R, ");
+            //stbSql.Append("    コール受付.会社名R = コール受付.会社名R, ");
+            //stbSql.Append("    コール受付.顧客名R = コール受付.顧客名R, ");
+            //stbSql.Append("    コール受付.顧客区分 = コール受付.顧客区分, ");
+            //stbSql.Append("    コール受付.住所 = コール受付.住所, ");
+            //stbSql.Append("    コール受付.自宅電話番号 = コール受付.自宅電話番号, ");
+            //stbSql.Append("    コール受付.会社電話番号 = コール受付.会社電話番号, ");
+            //stbSql.Append("    コール受付.携帯電話番号 = コール受付.携帯電話番号, ");
+            //stbSql.Append("    コール受付.郵便番号R = コール受付.郵便番号R, ");
+            //stbSql.Append("    コール受付.メールアドレス = コール受付.メールアドレス, ");
+            //stbSql.Append("    コール受付.型名 = コール受付.型名, ");
+            //stbSql.Append("    コール受付.シリアル番号 = コール受付.シリアル番号, ");
+            //stbSql.Append("    コール受付.製造工場コード = コール受付.製造工場コード, ");
+            //stbSql.Append("    コール受付.故障区分 = コール受付.故障区分, ");
+            //stbSql.Append("    コール受付.保証コード = コール受付.保証コード, ");
+            //stbSql.Append("    コール受付.購入日R = コール受付.購入日R, ");
+            //stbSql.Append("    コール受付.取扱店 = コール受付.取扱店, ");
+            //stbSql.Append("    コール受付.請求書番号 = コール受付.請求書番号, ");
+            //stbSql.Append("    コール受付.出張修理 = コール受付.出張修理, ");
+            //stbSql.Append("    コール受付.集荷日 = コール受付.集荷日, ");
+            //stbSql.Append("    コール受付.指摘症状 = コール受付.指摘症状, ");
+            //stbSql.Append("    コール受付.症状コード = コール受付.症状コード, ");
+            //stbSql.Append("    コール受付.修理明細 = コール受付.修理明細, ");
+            //stbSql.Append("    コール受付.送料 = コール受付.送料, ");
+            //stbSql.Append("    コール受付.技術料 = コール受付.技術料, ");
+            //stbSql.Append("    コール受付.その他費用 = コール受付.その他費用, ");
+            //stbSql.Append("    コール受付.値引き金額 = コール受付.値引き金額, ");
+            //stbSql.Append("    コール受付.備考 = コール受付.備考, ");
+            //stbSql.Append("    コール受付.入荷日 = コール受付.入荷日, ");
+            //stbSql.Append("    コール受付.修理担当者 = コール受付.修理担当者, ");
+            //stbSql.Append("    コール受付.再修理情報 = コール受付.再修理情報, ");
+            //stbSql.Append("    コール受付.再修理コード = コール受付.再修理コード, ");
+            //stbSql.Append("    コール受付.見積金額 = コール受付.見積金額, ");
+            //stbSql.Append("    コール受付.請求金額 = コール受付.請求金額, ");
+            //stbSql.Append("    コール受付.有償・無償区分 = コール受付.有償・無償区分, ");
+            //stbSql.Append("    コール受付.集荷伝票番号 = コール受付.集荷伝票番号, ");
+            //stbSql.Append("    コール受付.出荷伝票番号 = コール受付.出荷伝票番号, ");
+            //stbSql.Append("    コール受付.支払方法 = コール受付.支払方法, ");
+            //stbSql.Append("    コール受付.集荷指定時間 = コール受付.集荷指定時間, ");
+            //stbSql.Append("    コール受付.着荷指定日 = コール受付.着荷指定日, ");
+            //stbSql.Append("    コール受付.着荷指定時間 = コール受付.着荷指定時間, ");
+            //stbSql.Append("    コール受付.顧客満足度アンケート = コール受付.顧客満足度アンケート, ");
+            //stbSql.Append("    コール受付.セット交換型名 = コール受付.セット交換型名, ");
+            //stbSql.Append("    コール受付.セット交換金額 = コール受付.セット交換金額, ");
+            //stbSql.Append("    コール受付.セット交換日 = コール受付.セット交換日, ");
+            //stbSql.Append("    コール受付.セット交換シリアル = コール受付.セット交換シリアル, ");
+            //stbSql.Append("    コール受付.記事欄1 = コール受付.記事欄1, ");
+            //stbSql.Append("    コール受付.記事欄自由入力 = コール受付.記事欄自由入力, ");
+            //stbSql.Append("    コール受付.出荷日 = コール受付.出荷日, ");
+            //stbSql.Append("    コール受付.記事欄 = コール受付.記事欄, ");
+            //stbSql.Append("    コール受付.集荷方法 = コール受付.集荷方法, ");
+            //stbSql.Append("    コール受付.診断結果 = コール受付.診断結果, ");
+            //stbSql.Append("    コール受付.箱発送伝票番号 = コール受付.箱発送伝票番号, ");
+            //stbSql.Append("    コール受付.郵便番号S = コール受付.郵便番号S, ");
+            //stbSql.Append("    コール受付.住所S = コール受付.住所S, ");
+            //stbSql.Append("    コール受付.建物S = コール受付.建物S, ");
+            //stbSql.Append("    コール受付.会社名S = コール受付.会社名S, ");
+            //stbSql.Append("    コール受付.顧客名S = コール受付.顧客名S, ");
+            //stbSql.Append("    コール受付.電話番号S = コール受付.電話番号S, ");
+            //stbSql.Append("    コール受付.入荷区分 = コール受付.入荷区分, ");
+            //stbSql.Append("    コール受付.出荷区分 = コール受付.出荷区分, ");
+            //stbSql.Append("    コール受付.修理内容 = コール受付.修理内容, ");
+            //stbSql.Append("    コール受付.旧シリアル = コール受付.旧シリアル, ");
+            //stbSql.Append("    コール受付.作業区分 = コール受付.作業区分, ");
+            //stbSql.Append("    コール受付.返送着荷日 = コール受付.返送着荷日, ");
+            //stbSql.Append("    コール受付.転送メモ = コール受付.転送メモ, ");
+            //stbSql.Append("    コール受付.配送費 = コール受付.配送費, ");
+            //stbSql.Append("    コール受付.技術料_料金 = コール受付.技術料_料金, ");
+            //stbSql.Append("    コール受付.入荷伝票番号 = コール受付.入荷伝票番号, ");
+            //stbSql.Append("    コール受付.転送伝票番号 = コール受付.転送伝票番号, ");
+            //stbSql.Append("    コール受付.メモ = コール受付.メモ, ");
+            //stbSql.Append("    コール受付.[↓BLMD追加] = コール受付.[↓BLMD追加], ");
+            //stbSql.Append("    コール受付.窓口区分 = コール受付.窓口区分, ");
+            //stbSql.Append("    コール受付.品質事故 = コール受付.品質事故, ");
+            //stbSql.Append("    コール受付.再修理 = コール受付.再修理, ");
+            //stbSql.Append("    コール受付.質問内容 = コール受付.質問内容, ");
+            //stbSql.Append("    コール受付.回答内容 = コール受付.回答内容, ");
+            //stbSql.Append("    コール受付.お客様の声 = コール受付.お客様の声, ");
+            //stbSql.Append("    コール受付.カラー = コール受付.カラー, ");
+            //stbSql.Append("    コール受付.販売店名 = コール受付.販売店名, ");
+            //stbSql.Append("    コール受付.出荷予定日 = コール受付.出荷予定日, ");
+            //stbSql.Append("    コール受付.カートンロケ = コール受付.カートンロケ, ");
+            //stbSql.Append("    コール受付.メーカー保証 = コール受付.メーカー保証, ");
+            //stbSql.Append("    コール受付.NEVA伝票番号 = コール受付.NEVA伝票番号, ");
+            //stbSql.Append("    コール受付.納品日 = コール受付.納品日, ");
+            //stbSql.Append("    コール受付.代理店名 = コール受付.代理店名, ");
+            //stbSql.Append("    コール受付.備考_修理 = コール受付.備考_修理, ");
+            //stbSql.Append("    コール受付.対応区分 = コール受付.対応区分, ");
+            //stbSql.Append("    コール受付.メール区分1 = コール受付.メール区分1, ");
+            //stbSql.Append("    コール受付.メール区分2 = コール受付.メール区分2, ");
+            //stbSql.Append("    コール受付.メール件名 = コール受付.メール件名, ");
+            //stbSql.Append("    コール受付.メール本文 = コール受付.メール本文, ");
+            //stbSql.Append("    コール受付.MailNo = コール受付.MailNo, ");
+            //stbSql.Append("    コール受付.請求方法 = コール受付.請求方法, ");
+            //stbSql.Append("    コール受付.send_other_flg = コール受付.send_other_flg, ");
+            //stbSql.Append("    コール受付.ship_call_flg = コール受付.ship_call_flg, ");
+            //stbSql.Append("    コール受付.集荷箱 = コール受付.集荷箱, ");
+            //stbSql.Append("    コール受付.重量 = コール受付.重量, ");
+            //stbSql.Append("    コール受付.着払い金額 = コール受付.着払い金額, ");
+            //stbSql.Append("    コール受付.案内結果 = コール受付.案内結果, ");
+            //stbSql.Append("    コール受付.お客様指摘内容コード = コール受付.お客様指摘内容コード, ");
+            //stbSql.Append("    コール受付.案内結果コード = コール受付.案内結果コード, ");
+            //stbSql.Append("    コール受付.確認結果1 = コール受付.確認結果1, ");
+            //stbSql.Append("    コール受付.転送宅配 = コール受付.転送宅配, ");
+            //stbSql.Append("    コール受付.転送チャーター = コール受付.転送チャーター, ");
+            //stbSql.Append("    コール受付.送り状合致Yes = コール受付.送り状合致Yes, ");
+            //stbSql.Append("    コール受付.返却先変更Yes = コール受付.返却先変更Yes, ");
+            //stbSql.Append("    コール受付.返却先変更No = コール受付.返却先変更No, ");
+            //stbSql.Append("    コール受付.商品名入力Yes = コール受付.商品名入力Yes, ");
+            //stbSql.Append("    コール受付.回収日 = コール受付.回収日, ");
+            //stbSql.Append("    コール受付.日通連携済みフラグ = コール受付.日通連携済みフラグ ");
+            //stbSql.Append("FROM コール受付 INNER JOIN コール受付 ON ");
+            //stbSql.Append("    コール受付.受付番号 = コール受付.受付番号 ");
+            //stbSql.Append("WHERE ");
+            //stbSql.Append("    コール受付.受付番号 = '" + ReceptionNumber + "' ");
+
+            dsnLib.ExecSQLUpdate(stbSql.ToString());
+            stbSql.Clear();
+
+            //stbSql.Append("DELETE コール仮受付 ");
+            //stbSql.Append("WHERE ");
+            //stbSql.Append("    コール仮受付.受付番号 = '" + ReceptionNumber + "' ");
+
             dsnLib.DB_Close();
         }
     }

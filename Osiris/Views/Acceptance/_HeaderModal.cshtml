@@ -25,7 +25,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">共通メモ</h5>
-                <button type="button" class="btn close" data-dismiss="modal" aria-label="閉じる">
+                <button type="button" class="btn close cmemoclose" data-dismiss="modal" aria-label="閉じる">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
@@ -34,14 +34,15 @@
                 <div class="modal-body">
                     <button type="button" class="btn btn-primary" id="InsertDate" style="margin-bottom:10px;">日付挿入</button>
                     <div class="form-row" style="margin-bottom: 10px;">
-                        @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", id="CommonMemoInModal", placeholder = "" })
+                        <textarea class="form-control form-control-sm  d-flex align-items-center" cols="2000" id="CommonMemoInModal" name="CommonMemo" placeholder="" rows="20" style="max-width:100%;">@Model.CommonMemo</textarea>
                     </div>
                 </div>
-                @Html.HiddenFor(model => model.ReceptionNumber)
+                @Html.HiddenFor(model => model.ReceptionNumber, new {id = "hideReceptionNumber" })
+                <input type="hidden" value="@Model.CommonMemo" id="initCommonMemo" />
                 <!-- Modal フッター -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" id="EntryCommonMemoBtn">保存</button>
-                    <button type="button" class="btn btn-outline-dark pull-left" data-dismiss="modal">閉じる</button>
+                    <button type="button" class="btn btn-outline-dark pull-left cmemoclose" data-dismiss="modal">閉じる</button>
                 </div>
             </form>
         </div>
@@ -56,7 +57,7 @@
             cMemo = cMemo.Replace("\r\n", "\\r\\n");
         }
     }
-    $('#CommonMemo').val('@cMemo');
+    @*$('#CommonMemo').val('@cMemo');*@
 
     // 共通メモボタン押下時
     $('#CommonMemoBtn').click(function () {
@@ -94,38 +95,64 @@
     // 共通メモの保存ボタン押下時
     $('#EntryCommonMemoBtn').on('click', function (e) {
         e.preventDefault();
-        swal({
+        Swal.fire({
             title: "共通メモ登録確認",
             text: "変更内容を保存しますか？",
             icon: "warning",
-            buttons: true,
-            dangerMode: true,
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'OK'
         })
             .then((rst) => {
-                if (rst) $('#EntryCommonMemoForm').submit();
+
+                if (rst.value) {
+                    // パラメータを作成
+                    var param = {
+                        prmCommonMemo: $("#CommonMemoInModal").val(),
+                        prmReceptionNumber: $("#hideReceptionNumber").val()
+                    };
+
+                    $.ajax({
+                        url: '@Url.Action("EntryCommonMemo", "Acceptance")',
+                        type: "POST",
+                        data: param
+                    }).done(function (data, status, xhr) {
+                        // ajax正常時
+                        $("#initCommonMemo").val($('#CommonMemoInModal').val());
+                        $("#CommonMemo").val($('#CommonMemoInModal').val());
+                        $('#CommonMemoModal').modal("hide");
+                    })
+                }
+
             });
     });
 
     // 共通メモを閉じる時に変更があったらアラート
-    $('#CommonMemoModal').on('hide.bs.modal', function (e) {
-
-        if ($("#CommonMemoInModal").val() != "@cMemo") {
-            swal({
+    $('#CommonMemoModal').on('hide.bs.modal', function () {
+        var initCMemo = $("#initCommonMemo").val();
+        var afterCMemo = $("#CommonMemoInModal").val();
+        if (initCMemo != afterCMemo) {
+            Swal.fire({
                 title: "共通メモ変更破棄確認",
                 text: "変更した内容が全て失われますが宜しいですか？",
                 icon: "warning",
-                buttons: true,
-                dangerMode: true,
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'OK'
             })
                 .then((rst) => {
-                    if (rst) {
-                        $('#CommonMemoInModal').val('@cMemo');
-                        return true;
+                    if (rst.value) {
+                        $('#CommonMemoInModal').val(initCMemo);
+                        $('#CommonMemoModal').modal("hide");
                     } else {
                         return false;
                     }
                 });
+        } else {
+            return true;
         }
-        return true;
+        return false;
     });
 </script>

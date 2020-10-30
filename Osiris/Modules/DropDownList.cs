@@ -41,7 +41,7 @@ namespace Osiris.Modules
         }
 
         // 代理店
-        public List<CombDistributor> GetDropDownListDistributor()
+        public List<CombDistributor> GetDropDownListDistributor(string strVendorID)
         {
             DSNLibrary dsnLib = new DSNLibrary();
             StringBuilder stbSql = new StringBuilder();
@@ -50,9 +50,11 @@ namespace Osiris.Modules
             stbSql.Append("    代理店マスタ.ID, ");
             stbSql.Append("    代理店マスタ.代理店名 ");
             stbSql.Append("FROM ");
-            stbSql.Append("    代理店マスタ ");
+            stbSql.Append("    代理店マスタ INNER JOIN 販売店マスタ ON ");
+            stbSql.Append("    代理店マスタ.販売店 = 販売店マスタ.販売店名 ");
             stbSql.Append("WHERE ");
-            stbSql.Append("    代理店マスタ.削除フラグ <> '1' ");
+            stbSql.Append("    代理店マスタ.削除フラグ <> '1' AND ");
+            stbSql.Append("    販売店マスタ.ID = '" + strVendorID + "' ");
             stbSql.Append("ORDER BY ");
             stbSql.Append("    代理店マスタ.序列 ");
 

@@ -33,8 +33,17 @@ namespace Osiris.Modules
         public const string PAGE_ROW_SIZE_CD = "001";   // 1画面に表示する行数
         public const string HIDE_REPORT_ACC_INIT_CD = "002";    // 帳票に表示しない付属品の初期設定
         public const string REQ_COD_COST_DISTRIBUTOR = "003";   // 着払い金額必須代理店
+        public const string PHOTO_STUDIO_DIR_PATH = "004";   // 写真館ディレクトリ
+        public const string ALERT_UNLOCK_KEY = "005";   // アラート解除キー
+        public const string ADMIN_USER_ID = "006";   // 管理者ユーザー
 
         // 入荷済みのステータスコード
         public const string CPL_ARR_REP_STTS_CD = "3100";
+
+        // レポートエクセルの格納場所
+        public const string EXCEL_DIR_PATH = ".\\Content\\Report\\";
+
+        // レポートエクセルのファイル
+        public const string REPORT_CARTON_TAG = "CartonTag.xlsx";
     }
 }

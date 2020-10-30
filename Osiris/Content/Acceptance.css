@@ -13,17 +13,23 @@
     border-color: #C0C0C0;
 }
 
-    .btn-yellow:not(:disabled):not(.disabled).active, .show > .btn-yellow.dropdown-toggle {
+    .btn-yellow.active, .show > .btn-yellow.dropdown-toggle {
         color: white;
         background-color: #DD0000;
         border-color: #BB0000;
     }
 
-.btn-secondary:not(:disabled):not(.disabled).active, .show > .btn-secondary.dropdown-toggle {
-    color: #212529;
-    background-color: #ffc107;
-    border-color: #ffc107;
+.btn-silver {
+    color: black;
+    background-color: silver;
+    border-color: gray;
 }
+
+    .btn-silver.active, .show > .btn-silver.dropdown-toggle {
+        color: white;
+        background-color: tomato;
+        border-color: red;
+    }
 
 .hr-acpt {
     border-top: 4px double #000088;

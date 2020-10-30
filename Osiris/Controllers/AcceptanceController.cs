@@ -1,14 +1,13 @@
 ﻿using Osiris.Models;
 using Osiris.Modules;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Web;
 using System.Web.Mvc;
+using ClosedXML.Excel;
+using System.IO;
+using System.Diagnostics;
 
 namespace Osiris.Controllers
 {
@@ -40,7 +39,7 @@ namespace Osiris.Controllers
         //    return ReceptionNumberInfo;
         //}
 
-        // GET: 新規登録
+        // _Layout: 新規登録
         public ActionResult NewEntry()
         {
             AcceptanceModels models = new AcceptanceModels();
@@ -49,33 +48,111 @@ namespace Osiris.Controllers
             return SearchRcpInfo(models.ReceptionNumber);
         }
 
-        // POST: 受番検索
+        // _Layout: 受番検索
         public ActionResult SearchRcpInfo(string SearchReceptionNumber)
         {
             AcceptanceModels models = new AcceptanceModels();
             models.ReceptionNumber = SearchReceptionNumber;
             models.SetReceptionInfo();
             models.SetDropDownListVendor();
-            models.SetDropDownListDistributor();
+            models.SetDropDownListDistributor(models.VendorID);
+            models.SetPhotoStudioInfo();
             models.Step = "1";
 
             return View("Acceptance1", models);
         }
 
-        // POST: 共通メモ登録
+        // _Header ajax: 写真館フォルダチェック
+        // return Error：写真館ディレクトリ自体が存在しない NoN：受番のディレクトリが存在しない Exist：受番のディレクトリが存在する
         [HttpPost]
-        public ActionResult EntryCommonMemo(AcceptanceModels models)
+        public ActionResult CheckPhotoStudioDir(string prmReceptionNumber)
         {
-            models.UpdateCommonMemo();
-            models.SetReceptionInfo();
-            models.SetDropDownListVendor();
-            models.SetDropDownListDistributor();
-            models.Step = "1";
+            // 写真館ディレクトリの取得
+            List<ConstValue> constList = ExtensionMethods.GetConstValue(ConstDef.PHOTO_STUDIO_DIR_PATH);
 
-            return View("Acceptance1", models);
+            string PhotoStudioDirPath = "";
+            // 値は1件
+            foreach (ConstValue item in constList)
+            {
+               PhotoStudioDirPath = item.Value;
+            }
+
+            // 写真館ディレクトリ自体が存在しているかのチェック
+            if (!Directory.Exists(PhotoStudioDirPath))
+                return Json(new { Result = "Error" });
+
+            // 受番ディレクトリの存在チェック
+            if (!Directory.Exists(PhotoStudioDirPath + "\\" + prmReceptionNumber.Substring(1, 4) + "\\" + prmReceptionNumber))
+                return Json(new { Result = "NoN" });
+
+            return Json(new { Result = "Exist" });
         }
 
-        // GET: 代理店情報取得
+        // _Header ajax: 写真館フォルダ作成
+        [HttpPost]
+        public void CreatePhotoStudioDir(string prmReceptionNumber)
+        {
+            // 写真館ディレクトリの取得
+            List<ConstValue> constList = ExtensionMethods.GetConstValue(ConstDef.PHOTO_STUDIO_DIR_PATH);
+
+            string PhotoStudioDirPath = "";
+            // 値は1件
+            foreach (ConstValue item in constList)
+            {
+                PhotoStudioDirPath = item.Value;
+            }
+
+            Directory.CreateDirectory(PhotoStudioDirPath + "\\" + prmReceptionNumber.Substring(1, 4) + "\\" + prmReceptionNumber);
+        }
+
+        // _Header ajax: 写真館フォルダを開く
+        [HttpPost]
+        public void PhotoStudioFolderOpen(string prmReceptionNumber)
+        {
+            // 写真館ディレクトリの取得
+            List<ConstValue> constList = ExtensionMethods.GetConstValue(ConstDef.PHOTO_STUDIO_DIR_PATH);
+
+            string PhotoStudioDirPath = "";
+            // 値は1件
+            foreach (ConstValue item in constList)
+            {
+                PhotoStudioDirPath = item.Value;
+            }
+            Process.Start(PhotoStudioDirPath + "\\" + prmReceptionNumber.Substring(1, 4) + "\\" + prmReceptionNumber);
+        }
+
+
+        // _Header ajax: 共通メモ登録
+        [HttpPost]
+        public ActionResult EntryCommonMemo(string prmCommonMemo, string prmReceptionNumber)
+        {
+            DSNLibrary dsnLib = new DSNLibrary();
+            StringBuilder stbSql = new StringBuilder();
+
+            stbSql.Append("UPDATE コール受付 ");
+            stbSql.Append("SET ");
+            stbSql.Append("    コール受付.共通メモ = '" + prmCommonMemo + "' ");
+            stbSql.Append("WHERE ");
+            stbSql.Append("    コール受付.受付番号 = '" + prmReceptionNumber + "' ");
+
+            dsnLib.ExecSQLUpdate(stbSql.ToString());
+
+            dsnLib.DB_Close();
+
+            return Json(new { Result = "success" });
+        }
+
+        // Acceptance1 ajax: 販路変更時の代理店ドロップダウンリスト取得
+        public ActionResult GetDistributorDropDownList(string prmVendorID)
+        {
+            // 代理店ドロップダウンリストを取得
+            DropDownList ddList = new DropDownList();
+            IEnumerable<CombDistributor> DropDownListDistributor = ddList.GetDropDownListDistributor(prmVendorID);
+
+            return Json(DropDownListDistributor, JsonRequestBehavior.AllowGet);
+        }
+
+        // Acceptance1 ajax: 代理店情報取得
         [HttpGet]
         public ActionResult GetDistributorInfo(string prmDistributorID)
         {
@@ -147,62 +224,67 @@ namespace Osiris.Controllers
             return DistributorInfo;
         }
 
-        // POST: STEP1の次へボタン押下時
+        // Acceptance1: STEP1の次へボタン押下時
         public ActionResult NextToStep2(AcceptanceModels models)
         {
-            // バリデーションチェック START *********************************************************
-            // 着払い金額チェック
-            // 着払い必須代理店の取得
-            List<ConstValue> consts = ExtensionMethods.GetConstValue(ConstDef.REQ_COD_COST_DISTRIBUTOR);
-            // 選択代理店のチェック
-            bool ReqCodCostDistributor = false;
-            foreach(ConstValue item in consts)
+            // 更新してもいいユーザーの時だけ更新
+            if (models.EditPermitFlg)
             {
-                if (models.DistributorID == item.ConstCd)
-                    ReqCodCostDistributor = true;
-            }
-            // 着払い金額必須代理店の時は着払い金額入力必要
-            if (ReqCodCostDistributor && models.CodCost == 0)
-            {
-                // エラーメッセージに表示する代理店名を取得
-                DSNLibrary dsnLib = new DSNLibrary();
-                StringBuilder stbSql = new StringBuilder();
-
-                stbSql.Append("SELECT ");
-                stbSql.Append("    代理店名 ");
-                stbSql.Append("FROM ");
-                stbSql.Append("    代理店マスタ ");
-                stbSql.Append("WHERE ");
-                stbSql.Append("    ID = '" + models.DistributorID + "' ");
-
-                SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
-
-                if (sqlRdr.HasRows)
+                // バリデーションチェック START *********************************************************
+                // 着払い金額チェック
+                // 着払い必須代理店の取得
+                List<ConstValue> consts = ExtensionMethods.GetConstValue(ConstDef.REQ_COD_COST_DISTRIBUTOR);
+                // 選択代理店のチェック
+                bool ReqCodCostDistributor = false;
+                foreach(ConstValue item in consts)
                 {
-                    sqlRdr.Read();
-                    models.DistributorName = sqlRdr.GetValue<string>("代理店名");
+                    if (models.DistributorID == item.ConstCd)
+                        ReqCodCostDistributor = true;
+                }
+                // 着払い金額必須代理店の時は着払い金額入力必要
+                if (ReqCodCostDistributor && models.CodCost == 0)
+                {
+                    // エラーメッセージに表示する代理店名を取得
+                    DSNLibrary dsnLib = new DSNLibrary();
+                    StringBuilder stbSql = new StringBuilder();
+
+                    stbSql.Append("SELECT ");
+                    stbSql.Append("    代理店名 ");
+                    stbSql.Append("FROM ");
+                    stbSql.Append("    代理店マスタ ");
+                    stbSql.Append("WHERE ");
+                    stbSql.Append("    ID = '" + models.DistributorID + "' ");
+
+                    SqlDataReader sqlRdr = dsnLib.ExecSQLRead(stbSql.ToString());
+
+                    if (sqlRdr.HasRows)
+                    {
+                        sqlRdr.Read();
+                        models.DistributorName = sqlRdr.GetValue<string>("代理店名");
+                    }
+
+                    ModelState.AddModelError(string.Empty, "代理店が【" + models.DistributorName + "】の時は着払い金額は必須です。");
+
+                    sqlRdr.Close();
+                    dsnLib.DB_Close();
                 }
 
-                ModelState.AddModelError(string.Empty, "代理店が【" + models.DistributorName + "】の時は着払い金額は必須です。");
+                if (!ModelState.IsValid)
+                {
+                    models.SetDropDownListVendor();
+                    models.SetDropDownListDistributor(models.VendorID);
+                    models.Step = "1";
+                    return View("Acceptance1", models);
+                }
+                // バリデーションチェック END ***********************************************************
 
-                sqlRdr.Close();
-                dsnLib.DB_Close();
+                models.UpdateStep1();
             }
-
-            if (!ModelState.IsValid)
-            {
-                models.SetDropDownListVendor();
-                models.SetDropDownListDistributor();
-                models.Step = "1";
-                return View("Acceptance1", models);
-            }
-            // バリデーションチェック END ***********************************************************
-
-            models.UpdateStep1();
 
             models.SetReceptionInfo();
             models.SetDropDownListProduct();
             models.SetDropDownListModel(models.ProductID);
+            models.SetPhotoStudioInfo();
             models.SetShowReportAccNum();
             models.SetHideReportAccNum();
             models.Step = "2";
@@ -210,7 +292,7 @@ namespace Osiris.Controllers
             return View("Acceptance2", models);
         }
 
-        // GET: 商品名変更時の製品型番リスト取得
+        // Acceptance2 ajax: 商品名変更時の製品型番リスト取得
         public ActionResult GetModelDropDownList(string prmProductID)
         {
             // 製品型番ドロップダウンリストを取得
@@ -220,7 +302,7 @@ namespace Osiris.Controllers
             return Json(DropDownListModel, JsonRequestBehavior.AllowGet);
         }
 
-        // GET: 商品名変更時の帳票表示付属品の初期値取得
+        // Acceptance2 ajax: 商品名変更時の帳票表示付属品の初期値取得
         public ActionResult GetShowReportAcc(string prmProductID)
         {
             DSNLibrary dsnLib = new DSNLibrary();
@@ -249,7 +331,7 @@ namespace Osiris.Controllers
             return Json(ShowReportAccInitList, JsonRequestBehavior.AllowGet);
         }
 
-        // GET: 商品名変更時の帳票非表示付属品の初期値取得
+        // Acceptance2 ajax: 商品名変更時の帳票非表示付属品の初期値取得
         public ActionResult GetHideReportAcc(string prmProductID)
         {
             DSNLibrary dsnLib = new DSNLibrary();
@@ -271,7 +353,7 @@ namespace Osiris.Controllers
             return Json(HideReportAccLists, JsonRequestBehavior.AllowGet);
         }
 
-        // GET: 製品型番リスト変更時の保証期間取得
+        // Acceptance2 ajax: 製品型番リスト変更時の保証期間取得
         public ActionResult GetWarrantyPeriod(string prmModelNumber)
         {
             DSNLibrary dsnLib = new DSNLibrary();
@@ -292,26 +374,99 @@ namespace Osiris.Controllers
             return Json(new { WarrantyPeriod = intWarrantyPeriod }, JsonRequestBehavior.AllowGet);
         }
 
-        // POST: STEP2の次へボタン押下時
+        // Acceptance2: カートンタグボタン押下時
+        public FileResult CartonTag(AcceptanceModels models)
+        {
+            string ExcelFilePath = ConstDef.EXCEL_DIR_PATH + ConstDef.REPORT_CARTON_TAG;
+
+            // Excelファイルを開く
+            var workbook = new XLWorkbook(ExcelFilePath);
+            // ワークシートを取得する
+            var worksheet = workbook.Worksheet("カートンTAG");
+
+            worksheet.Cell("B2").Value = "テスト";
+
+            var OutputFileName = "あああ";
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", OutputFileName);
+            }
+        }
+
+        // Acceptance2: STEP2の次へボタン押下時
         public ActionResult NextToStep3(AcceptanceModels models)
         {
-            models.UpdateStep2Call();
-            models.UpdateStep2Acc();
+            // 更新してもいいユーザーの時だけ更新
+            if (models.EditPermitFlg) {
+                models.UpdateStep2Call();
+                models.UpdateStep2Acc();
+            }
 
             models.SetReceptionInfo();
-            models.SetDropDownListRepairStatus();
+            models.SetPhotoStudioInfo();
+            models.SetShowReportAccNum();
+            models.SetHideReportAccNum();
             models.Step = "3";
 
             return View("Acceptance3", models);
         }
 
-        // POST: STEP1へ戻る
+        // Acceptance2: STEP1へ戻る
         public ActionResult BackToStep1FromStep2(AcceptanceModels models)
         {
-            models.UpdateStep2Call();
-            models.UpdateStep2Acc();
+            // 更新してもいいユーザーの時だけ更新
+            if (models.EditPermitFlg) {
+                models.UpdateStep2Call();
+                models.UpdateStep2Acc();
+            }
 
             return SearchRcpInfo(models.ReceptionNumber);
+        }
+
+        // Acceptance3: 登録
+        public ActionResult Complete(AcceptanceModels models)
+        {
+            models.Complete();
+
+            return View("Complete", models);
+        }
+
+        // Acceptance3 ajax: アラートロック解除
+        public ActionResult UnlockAlert(string prmAlertUnlockKey, string prmReceptionNumber)
+        {
+            // 正しいアラート解除キー取得
+            List<ConstValue> constList = ExtensionMethods.GetConstValue(ConstDef.ALERT_UNLOCK_KEY);
+
+            // 値は1件
+            string alertUnlockKey = "";
+            foreach (ConstValue item in constList)
+            {
+                alertUnlockKey = item.Value;
+            }
+
+            // 入力された解除キーと一致しているか
+            if (alertUnlockKey == prmAlertUnlockKey) {
+                // 一致している場合はアラートを解除
+                DSNLibrary dsnLib = new DSNLibrary();
+                StringBuilder stbSql = new StringBuilder();
+
+                stbSql.Append("UPDATE アラートマスタ ");
+                stbSql.Append("SET ");
+                stbSql.Append("    アラートマスタ.削除フラグ = '1' ");
+                stbSql.Append("WHERE ");
+                stbSql.Append("    アラートマスタ.受付番号 = '" + prmReceptionNumber + "' ");
+                stbSql.Append("AND アラートマスタ.修理ステータス = '" + ConstDef.CPL_ARR_REP_STTS_CD + "' ");
+
+                dsnLib.ExecSQLUpdate(stbSql.ToString());
+                dsnLib.DB_Close();
+
+                return Json(new { result = "success" });
+            } else {
+                // 一致していない場合はエラーを返す
+                return Json(new { result = "failure" });
+            }
         }
 
         // POST: STEP1へ戻る

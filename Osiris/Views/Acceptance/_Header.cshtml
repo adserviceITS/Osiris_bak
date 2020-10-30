@@ -1,4 +1,5 @@
 ﻿@model Osiris.Models.AcceptanceModels
+
 <div class="row">
     <div class="input-group col-md-3">
         <div class="input-group-prepend">
@@ -76,7 +77,14 @@
                 <td>@Model.DistributorName</td>
             </tr>
         </table>
-        <button type="button" class="btn btn-secondary btn-block" style="font-size:19px;">写真館</button>
+        @{
+            if (Model.ExistPhotoStudioDir) {
+                <button type="button" id="PhotoStudioBtn" class="btn btn-light btn-block border-secondary" style="font-size:19px; color:red;">写真館</button>
+            } else {
+                <button type="button" id="PhotoStudioBtn" class="btn btn-light btn-block border-secondary" style="font-size:19px;">写真館</button>
+            }
+        }
+
     </div>
     <div class="input-group col-md-3">
         <div class="col-md-6">
@@ -132,12 +140,110 @@
         }
     </div>
 </div>
+@Html.HiddenFor(model => Model.EditPermitFlg)
 
 <script type="text/javascript">
+
     // 受付番号のCボタン押下時
     $("#RcpNoCopyBtn").click(function () {
         $("#ReceptionNumber").select();
         document.execCommand('copy');
     })
+
+    // 写真館ボタン押下時
+    $("#PhotoStudioBtn").click(function () {
+        $.ajax({
+            url: '@Url.Action("CheckPhotoStudioDir", "Acceptance")',
+            type: "POST",
+            async: false,
+            data: { prmReceptionNumber: $("#ReceptionNumber").val() }
+        })
+            // ajax正常終了時
+            .done(function (data) {
+                // 正常時
+                switch (data["Result"]) {
+                    case "Error":
+                        Swal.fire({
+                            title: "エラー",
+                            text: "「写真館フォルダ」に設定されたフォルダが存在しません！",
+                            icon: "error",
+                        });
+                        return false;
+                        break;
+                    case "NoN":
+                        Swal.fire({
+                            title: "確認",
+                            text: "写真保管用フォルダを作成しますか？",
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'OK'
+                        })
+                            .then(result => {
+                                if (result.value) {
+                                    $.ajax({
+                                        url: '@Url.Action("CreatePhotoStudioDir", "Acceptance")',
+                                        type: "POST",
+                                        async: false,
+                                        data: { prmReceptionNumber: $("#ReceptionNumber").val() }
+                                    })
+                                        // ajax正常終了時
+                                        .done(function (data) {
+                                            Swal.fire("作成完了", $("#ReceptionNumber").val() + " でフォルダを作成しました。", "success");
+                                            // 写真館ボタンの文字を赤に変える
+                                            $("#PhotoStudioBtn").css("color", "Red");
+                                            PhotoStudioFolderOpen();
+                                        })
+                                        // ajaxエラー終了時
+                                        .fail(function (xhr, status, error) {
+                                            Swal.fire("ajax エラー", "Acceptance.CreatePhotoStudioDir\n" + error, "error");
+                                            return false;
+                                        });
+                                } else {
+                                    return false;
+                                }
+                            });
+                        break;
+                    case "Exist":
+                        PhotoStudioFolderOpen();
+                        break;
+                    default:
+                        Swal.fire("予期しないエラー", "PhotoStudioBtn.click\n" + error, "error");
+                        break;
+                }
+            })
+            // ajaxエラー終了時
+            .fail(function (xhr, status, error) {
+                Swal.fire("ajax エラー", "Acceptance.CheckPhotoStudioDir\n" + error, "error");
+            });
+    });
+
+    var PhotoStudioFolderOpen = function () {
+        $.ajax({
+            url: '@Url.Action("PhotoStudioFolderOpen", "Acceptance")',
+            type: "POST",
+            data: { prmReceptionNumber: $("#ReceptionNumber").val() }
+        })
+            // ajaxエラー終了時
+            .fail(function (xhr, status, error) {
+                Swal.fire("ajax エラー", "Acceptance.PhotoStudioFolderOpen\n" + error, "error");
+            });
+    }
+
+    // 最終処理で権限設定
+    $(window).on('load', function () {
+        // 編集不可だったら一旦全てのフィールドを無効化する
+        var editPermitFlg = @Model.EditPermitFlg.ToString().ToLower();
+
+        if (!editPermitFlg) {
+            disabledForm($("#EntryForm1, #EntryForm2, #EntryForm3"));
+            // 動かしてもいいやつを有効化する
+            $("#ReceptionNumber, #RcpNoCopyBtn").prop('disabled', false);       // Header
+            $("#NextToStep2Btn").prop('disabled', false);                       // Step1
+            $("#NextToStep3Btn, #BackToStep1Btn").prop('disabled', false);      // Step2
+
+        }
+    });
 
 </script>

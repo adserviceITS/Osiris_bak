@@ -3,14 +3,18 @@
     ViewBag.Title = "受付 Step3";
 }
 <link href="~/Content/Acceptance.css" rel="stylesheet" />
-@using (Html.BeginForm())
+@using (Html.BeginForm(null, null, "", FormMethod.Post, new { id = "EntryForm3" }))
 {
     <header class="sticky-top" style="top:40px; background-color:white; padding-top:10px; padding-bottom: 1px;">
         @Html.Partial("_Header")
     </header>
     <main class="mb-5">
         <div class="normal-box5-red">
-            <p>登録内容を確認して下さい。</p>
+            @if(Model.EditPermitFlg) {
+                <p>登録内容を確認して下さい。</p>
+            } else {
+                <p>登録権限がない為、確認のみとなります。</p>
+            }
         </div>
         <div class="form-row" style="margin-top:20px;">
             <div class="col-md-6">
@@ -132,16 +136,16 @@
                                 <td colspan="2" style="background-color:#CCFFFF;">製品情報</td>
                             </tr>
                             <tr>
-                                <td style="width:90px; vertical-align: middle;">シリアル</td>
-                                <td>@Model.SerialNo</td>
-                            </tr>
-                            <tr>
                                 <td style="vertical-align: middle;">商品名</td>
                                 <td>@Model.ProductName</td>
                             </tr>
                             <tr>
                                 <td style="vertical-align: middle;">製品型番</td>
                                 <td>@Model.ModelName</td>
+                            </tr>
+                            <tr>
+                                <td style="width:90px; vertical-align: middle;">シリアル</td>
+                                <td>@Model.SerialNo</td>
                             </tr>
                             <tr>
                                 <td style="vertical-align: middle;">購入日</td>
@@ -162,10 +166,10 @@
                         <img style="max-width:100%; margin-top:5px;" src="~/Content/img/ProductSample02.jpg" alt="代理店サンプル２" id="DistributorSample02" />
                     </div>
                 </div>
-                <!-- 申請内容 ------------------------------------------------------------------------------>
-                <div class="normal-box5-red" style="margin-top:20px;">
-                    <p>申請内容の仕様不明</p>
-                    <p style="padding-bottom:200px; margin-top:20px;">申告内容NO｜申告内容</p>
+                <!-- 指摘症状 ------------------------------------------------------------------------------>
+                <div style="margin-top:20px;">
+                    <p class="bg-danger text-white" style="margin:unset; font-size:16px; text-align:center;">指摘症状</p>
+                    @Html.TextAreaFor(model => model.PointOutProblem, 15, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", @readonly = "readonly" })
                 </div>
                 <!-- 付属品情報入力 ------------------------------------------------------------------------------>
                 <div class="form-row" style="margin-top:30px;">
@@ -225,85 +229,108 @@
             </div>
             <div class="col-md-6 slide-fixed">
                 <p style="margin:unset; font-size:16px; text-align:center; background-color:InfoBackground; border: solid 1px; border-color:#DCDCDC;">共通メモ</p>
-                @Html.TextAreaFor(model => model.CommonMemo, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "", @readonly = "readonly" })
+                <textarea class="form-control form-control-sm  d-flex align-items-center" cols="2000" id="CommonMemo" name="CommonMemo" placeholder="" readonly="readonly" rows="15" style="max-width:100%;">@Model.CommonMemo</textarea>
             </div>
         </div>
         <!-- 操作ボタン ------------------------------------------------------------------------------>
         <div class="form-inline" style="text-align:center; display: block; margin-top: 30px; font-size: 18px;">
-            <button type="button" class="btn btn-primary btn-lg" style="width: 70%;" formaction="/Acceptance/NextToStep3" id="NextToStep3Btn">登録</button>
+            <button type="button" class="btn btn-primary btn-lg" style="width: 70%;" id="CompleteBtn">登録</button>
             <button class="btn btn-danger btn-lg" style="width: auto;" formaction="/Acceptance/BackToStep1FromStep3" id="BackToStep1Btn">STEP１に戻る</button>
         </div>
     </main>
 }
+
 <!-- モーダル ---------------------------------------------------------------------->
 @Html.Partial("_HeaderModal")
 <!-- アラート ------------------>
-<div class="modal fade" tabindex="-1" role="dialog" id="EntryAlertModal" aria-labelledby="label1" aria-hidden="true">
+<div class="modal fade" tabindex="-1" role="dialog" id="DispAlertModal" aria-labelledby="label1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content" style="font-size:14px;">
             <div class="modal-header">
-                <h5 class="modal-title">アラート追加</h5>
+                <h5 class="modal-title">以下の理由により登録出来ません。</h5>
                 <button type="button" class="btn close" data-dismiss="modal" aria-label="閉じる">
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form role="form" id="EntryAlertModalForm" action="/Acceptance/EntryAlert" method="POST">
+            <form role="form" id="AlertModalForm" action="/Acceptance/unlockAlert" method="POST">
                 <!-- Modal ボディー -->
                 <div class="modal-body">
-                    <div class="form-row">
-                        <div class="col-md-4">
-                            受付番号
-                        </div>
-                        <div class="col-md-4">
-                            @Model.ReceptionNumber
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-top:5px;">
-                        <div class="col-md-4">
-                            修理ステータス
-                        </div>
-                        <div class="col-md-4">
-                            @Html.DropDownListFor(
-                                model => model.RepairStatusNo, // プロパティ
-                                new SelectList(Model.DropDownListRepairStatus, "RepairStatusNo", "RepairStatusName"),
-                                "",
-                                new { @class = "form-control form-control-sm" }
-                            )
-                        </div>
-                    </div>
                     <div class="form-row" style="margin-top:15px; margin-bottom:10px;">
-                        @Html.TextAreaFor(model => model.AlertMsg, 20, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", placeholder = "メッセージ" })
+                        @Html.TextAreaFor(model => model.AlertMsg, 15, 2000, new { @class = "form-control form-control-sm  d-flex align-items-center", style = "max-width:100%;", @readonly = "readonly" })
                     </div>
                 </div>
                 <!-- Modal フッター -->
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="EntryAlertBtn">保存</button>
-                    <button type="button" class="btn btn-outline-dark pull-left" data-dismiss="modal">閉じる</button>
-                </div>
+                    <div class="form-row float-right">
+                        <div class="col-md-8">
+                            <input type="password" id="AlertUnlockKey"  name="AlertUnlockKey" placeholder="解除キー" />
+                            <div class="invalid-feedback" style="font-size:12px;">解除キーが正しくありません。</div>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-outline-dark pull-left" id="unlockBtn">ロック解除</button>
+                        </div>
+                    </div>
+                @Html.HiddenFor(model => model.ReceptionNumber)
             </form>
         </div>
     </div>
 </div>
-<script type="text/javascript">
-    $(function () {
-        // 読込み時の初期設定
-        // 経由
-        if (isEmpty("@Model.VendorID")) {
-            $("#route").val("個人経由");
-        } else {
-            $("#route").val("代理店経由")
-        }
 
-        // 登録ボタン押下時
-        $('#NextToStep3Btn').click(function () {
-            $('#EntryAlertModal').modal();
-            @{
-                string aMSG = Model.AlertMsg;
-                if (!string.IsNullOrEmpty(aMSG)) {
-                    aMSG = aMSG.Replace("\r\n", "\\r\\n");
-                }
+<script type="text/javascript">
+$(function () {
+
+    // 読込み時の初期設定
+    // 経由
+    if (isEmpty("@Model.VendorID")) {
+        $("#route").val("個人経由");
+    } else {
+        $("#route").val("代理店経由")
+    }
+
+    // チェックボックスを変更不可にする。
+    $('input:checkbox').prop('disabled', true);
+
+    // 登録ボタン押下時
+    $('#CompleteBtn').click(function () {
+
+        var alertMsg = $("#AlertMsg").text();
+
+        if (!isEmpty(alertMsg)) {
+            $('#DispAlertModal').modal();
+        } else {
+            $("#EntryForm3").attr('action', '/Acceptance/Complete');
+            $("#EntryForm3").submit();
+        }
+    });
+
+    // ロック解除ボタン押下時
+    $('#unlockBtn').click(function () {
+        // パラメータ設定
+        var param = {
+            prmAlertUnlockKey: $("#AlertUnlockKey").val(),
+            prmReceptionNumber: $("#ReceptionNumber").val()
+        }
+        // ajax実行
+        $.ajax({
+            url: '@Url.Action("UnlockAlert", "Acceptance")',
+            type: "POST",
+            data: param
+        }).done(function (data, status, xhr) {
+            // ajax成功時
+            // ロック解除成否判定
+            if (data["result"] == "success") {
+                $("#EntryForm3").attr('action', '/Acceptance/Complete');
+                $("#EntryForm3").submit();
+            } else {
+                // 失敗時はエラーメッセージを表示
+                $("#AlertUnlockKey").addClass("is-invalid");
+                $("#AlertUnlockKey").select();
             }
-            $('#EntryAlertModal').val('@aMSG');
+        }).fail(function (xhr, status, error) {
+            // 異常時
+            Swal.fire("予期しないエラー", "unlockBtn.click\n" + error, "error");
         });
     });
+});
+
 </script>
